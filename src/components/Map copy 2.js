@@ -36,7 +36,29 @@ let activeStyle = {
 
 let activeClassName = "underline"
 
+
+function withRouter(Component) {
+  function ComponentWithRouterProp(props) {
+    let location = useLocation();
+    let navigate = useNavigate();
+    let params = useParams();
+    console.log(location)
+    return (
+      <Component
+        {...props}
+        router={{ location, navigate, params }}
+      />
+    );
+  }
+
+  return ComponentWithRouterProp;
+}
+
 class Map extends React.Component  {
+  
+  constructor(props, context) {
+    super(props, context);
+  }
 
   state = {
     stationList: [],
@@ -176,4 +198,56 @@ render(){
   );}
 }
 
-export default Map;
+export default withRouter(Map);
+
+/*for(let el of stationList){
+                let markerPosition=[el['geolocationCoordinateN'], el['geolocationCoordinateE']];
+                markers.push(markerPosition);
+              }*/
+
+/*this.state [markers, setMarkers] = useState([
+    {
+      position: { lng: -122.673447, lat: 45.5225581 },
+      text: "Voodoo Doughnut"
+    }
+  ]);*/
+
+/*handleClick = () => {
+    setMarkers([
+      {
+        position: { lng: -110.673447, lat: 40.5225581 },
+        text: "Voodoo Doughnut"
+      },
+      {
+        position: { lng: -110.6781446, lat: 40.5225512 },
+        text: "Bailey's Taproom"
+      },
+      {
+        position: { lng: -110.67535700000002, lat: 40.5192743 },
+        text: "Barista"
+      }
+    ]);
+  };*/
+
+  /*    
+          /*for(let el of stationList){
+                let markerPosition=[el['geolocationCoordinateN'], el['geolocationCoordinateE']];
+                markers.push(markerPosition);
+              }*/
+          /*    let size = stationList['stationList'].length;
+              for(var i = 0; i < size ; i++){
+                let item = stationList['stationList'][i];
+                var markerPosition=[item['geolocationCoordinateN'], item['geolocationCoordinateE'], item['stationId']];
+                markers.push(markerPosition);
+              }
+              console.log(stationList);
+              console.log(markers);
+              this.setState({
+                  ...this.state,
+                  stationList
+              });
+              this.setState({
+                ...this.state,
+                markers
+            });
+          })*/

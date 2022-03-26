@@ -54,6 +54,13 @@ class Map extends React.Component  {
     console.log(this.props.location)
   }
 
+  addStationMarker(event){
+    console.log("Click!")
+    const {markers} = this.state
+    markers.push(event.latlng)
+    this.setState({markers})
+  }
+
   refreshMarkers = () => {
       fetch(`http://127.0.0.1:8080/api/station/get-stationlist`)
           .then(res => res.json())
@@ -157,8 +164,8 @@ render(){
     </nav>
     </div>
       <div className="d-flex p-2 col-example">
-        <MapContainer center={position} zoom={12} style={mapStyle} maxZoom={18} zoomControl={false}>
-        <TileLayer
+        <MapContainer center={position} onClick={this.addStationMarker} zoom={12} style={mapStyle} maxZoom={18} zoomControl={false}>
+        <TileLayer onClick={this.addStationMarker}
           url="http://{s}.tile.osm.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
         />

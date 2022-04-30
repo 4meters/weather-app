@@ -6,6 +6,8 @@ import Login from "./components/Login";
 import Register from  "./components/Register";
 import AddStation from "./components/AddStation"
 import AddStationOnMap from "./components/AddStationOnMap"
+import Statistics from "./components/Statistics";
+import UserStationList from "./components/UserStationList"
 
 class _Routes extends React.Component{
     render(){
@@ -21,6 +23,10 @@ class _Routes extends React.Component{
                     <Route path="/add-station" element={<AddStation/>}>
                     </Route>
                     <Route path="/add-station-on-map" element={<AddStationOnMap/>}>
+                    </Route>
+                    <Route path="/station-list" element={<UserStationList/>}>
+                    </Route>
+                    <Route path="/statistics" element={<Statistics/>}>
                     </Route>
                 </Routes>
             </BrowserRouter>

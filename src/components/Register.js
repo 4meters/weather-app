@@ -1,27 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useEffect} from "react";
+import { useNavigate } from "react-router";
 
 import {MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import {Icon} from 'leaflet'
 import {Navigation} from 'react-minimal-side-navigation';
+import NavList from "./NavList";
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 //import 'SideNavigation.js'
 
+//https://codereview.stackexchange.com/questions/235854/react-setstate-function-in-useeffect
 
-class Register extends React.Component  {
-  
-  state = {
-    token: [],
-    login: [],
-    password: []
-  };
+function Register(props) {
 
-  sleep = (milliseconds) => {
+
+  const [stateFirstRun,setStateFirstRun] = useState(true);
+  const [stateLogin,setStateLogin] = useState("");
+  const [statePassword,setStatePassword] = useState("");
+  const [stateIsRegistered,setStateIsRegistered] = useState(false);
+  const [stateIsFailedRegister,setStateIsFailedRegister] = useState(false);
+
+  const navigate = useNavigate();
+
+
+  const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
   }
 
-  validateLoginData() {
+  const validateLoginData = () => {
 
-    if(this.state.login>0 && this.state.password>0){
+    if(stateLogin>0 && statePassword>0){
       return true;
     }
     else{
@@ -30,68 +37,93 @@ class Register extends React.Component  {
 
   }
 
-  handleChangeLogin = (event) => {
-    this.setState({login: event.target.value});
+  
+  useEffect(() => {console.log(stateIsFailedRegister)}, [stateIsFailedRegister])
+
+  const handleChangeLogin = event => {
+    setStateLogin(event.target.value);
   }
 
-  handleChangePassword = (event) => {
-    this.setState({password: event.target.value});
+  const handleChangePassword = event => {
+    setStatePassword(event.target.value);
   }
 
-  handleRegisterUser = (event) => {
+  const handleRegisterUser = event => {
     event.preventDefault();
-    //if(this.validateLoginData()){
-      const requestParams = {
+    const requestParams = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        "email" : this.state.login,
-        "password" : this.state.password
+        "login" : stateLogin,
+        "password" : statePassword
     })
     };
-    fetch(`http://127.0.0.1:8080/api/user/create`, requestParams)
-        .then(res =>{
-          console.log(res)
-          if(res.status===201){
-            alert("Register succesful")
-          }
-          else{
-            alert("Error when registering")
-          }
+    //TODO add status check
+
+    fetch(`http://127.0.0.1:8080/api/user/register`, requestParams)
+        .then(response => {
+            if(response.status===201){
+              setStateIsRegistered(true);
+              setStateIsFailedRegister(false);
+              console.log("201")
+            }
+            else{
+              setStateIsFailedRegister(true);
+              setStateIsRegistered(false);
+            }
+            //if 201!
+            
         })
-    //}
-    //else{
-    //  alert("Error")
-    //}
-    //TODO exception for http status 403
-    
   }
 
 
-
-
-  
-render(){
-  
+  const handleClickLogin = () =>{
+    navigate("/login")
+  }
 
   return (
     <>   
+<div className="d-flex p-2 col-example">
+  <NavList/>
+</div>
+
       <div className="d-flex p-2 col-example">
-      <div className="Register">
-        <form onSubmit={this.handleRegisterUser}>
-          <label>Login:<p/>
-            <input type="text" value={this.state.login} onChange={this.handleChangeLogin} />
-          </label>
-          <p/>
-          <label>Password:<p/>
-            <input type="text" value={this.state.password} onChange={this.handleChangePassword} />
-          </label><p/>
-          <input type="submit" value="Register" />
-        </form>
-      </div>
+      {!stateIsRegistered ?
+        <div className="Login">
+          <form onSubmit={handleRegisterUser}>
+            <label>Login:<p/>
+              <input type="text" value={stateLogin} onChange={handleChangeLogin} />
+            </label>
+            <p/>
+            <label>Password:<p/>
+              <input type="password" value={statePassword} onChange={handleChangePassword} />
+            </label><p/>
+            <input type="submit" value="Register" />
+          </form>
+          <div>
+          {stateIsFailedRegister ?
+            <div><h2>Register failed</h2></div>
+            : <> </>
+          }</div>
+          <h3>Already have account?</h3>
+          <div>
+            <button onClick={handleClickLogin}>Login</button>
+          </div>
+          
+        </div>
+        : 
+          
+          <div className="GoToLogin">
+          <h3>Succesfully registered</h3>
+          <button onClick={handleClickLogin}>Go To Login</button>
+          </div>
+          
+
+      }
+      
       </div>
     </>
-  );}
+  )
 }
 
 export default Register;

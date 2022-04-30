@@ -32,8 +32,18 @@ function NavList() {
               elemBefore: () => <></>,
             },
             {
-              title: 'Add-station',
+              title: 'Station list',
+              itemId: '/station-list',
+              elemBefore: () => <></>,
+            },
+            {
+              title: 'Add station',
               itemId: '/add-station',
+              elemBefore: () => <></>,
+            },
+            {
+              title: 'Statistics',
+              itemId: '/statistics',
               elemBefore: () => <></>,
             },
           ]}

@@ -1,125 +1,86 @@
-import React, { useState } from "react";
+import React, { useState, useEffect} from "react";
 
 import {MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import {Icon} from 'leaflet'
 import {Navigation} from 'react-minimal-side-navigation';
 import NavList from "./NavList";
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
-import {Navigate} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import {withRouter} from '../withRouter'
 //import 'SideNavigation.js'
 
 
-class AddStation extends React.Component  {
+function AddStation(props) {
 
-  /*state = {
-    token: "",
-    login: "",
-    password: ""
-  };
-  */
-  constructor(){
-    super();
-    //TODO check if not null in localStorage
+  const [stateToken,setStateToken] = useState("");
+  const [stateIsLoggedIn,setStateIsLoggedIn] = useState(false);
+  const [stateStationId,setStateStationId] = useState("");
+  const [stateStationKey,setStateStationKey] = useState("");
+  const navigate = useNavigate();
+
+  const sleep = (milliseconds) => {
+    return new Promise(resolve => setTimeout(resolve, milliseconds))
+  }
+
+
+  useEffect(() =>{
+    console.log("Logged in:"+stateIsLoggedIn)
     let token=localStorage.getItem('token');
     if(typeof(token)==="string"){
       if(token.length>0){
-        this.state = {
-          token: localStorage.getItem('token'),
-          stationId: "",
-          isLoggedIn: true,
-          redirect: false,
-        }
+        setStateToken(localStorage.getItem('token'));
+        setStateIsLoggedIn(true);
       }
       else{
-        this.state = {
-          token: "",
-          stationId: "",
-          isLoggedIn: false,
-          redirect: false,
-        }
+        setStateIsLoggedIn(false);
       }
     }
     else{
-      this.state = {
-        token: "",
-        stationId: "",
-        isLoggedIn: false,
-        redirect: false,
+      setStateIsLoggedIn(false);
       }
-    }
-    
+  }, []) //only on first run, if not it breaks some things with no errors in console
+
+
+  const switchToLoginPage = () =>{  
+    navigate("/login");
   }
 
-
-  componentDidMount(){
-    console.log("Logged in:"+this.state.isLoggedIn)
+  const handleChangeStationId = (event) => {
+    setStateStationId(event.target.value);
   }
 
-
-
-  handleChangeStationId = (event) => {
-       this.setState({stationId: event.target.value});
-       //this.loadToken();
+  const handleChangeStationKey = (event) => {
+    setStateStationKey(event.target.value);
   }
 
-
-  handleStationIdCheck = (event) => {
+  const handleStationIdCheck = (event) => {
     event.preventDefault();
-    console.log(this.state.stationId)
+    console.log(stateStationId)
     const requestParams = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        "stationId" : this.state.stationId
+        "stationId" : stateStationId,
+        "stationKey" : stateStationKey,
+        "token": stateToken
     })
     };
 
     fetch(`http://127.0.0.1:8080/api/station/verify-station`, requestParams)
         .then(response => {
             if(response.status==200){
-              this.setState({
-                redirect: true
-              })
+              navigate("/add-station-on-map?stationId="+stateStationId)
             }            
         })
   }
 
-  /*handleRegisterUser = (login,password) => {
-    const requestParams = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        "login" : login,
-        "password" : password
-    })
-    };
 
-    fetch(`http://127.0.0.1:8080/api/user/register`, requestParams)
-        .then(res => res.json())
-        .then(response => {
-            console.log(response['token']);
-            let token = response['token']
-            this.setState({
-                ...this.state,
-                token
-            });
-        })
-  }*/
-
-  handleClickLogout = () =>{
-    this.setState({
-      isLoggedIn: false,
-      token: ""
-    })
+  const handleClickLogout = () =>{
+    setStateIsLoggedIn(false);
+    setStateToken("");
     localStorage.setItem('token',"");
   }
 
-
-
-  
-render(){
-  const isLoggedIn = this.state.isLoggedIn;
 
   return (
     <>   
@@ -128,16 +89,17 @@ render(){
 </div>
 
       <div className="d-flex p-2 col-example">
-
-      {this.state.redirect&& <Navigate to='/add-station-on-map' replace={true} />}
-
-      {!isLoggedIn ?
-        <div className="Login"> 
+      {stateIsLoggedIn ?
+        <div className="Add-station">
           <h1>Add new station</h1>
-          <h3>Enter your stationId</h3>
-          <form onSubmit={this.handleStationIdCheck}>
-            <label>StationId:<p/>
-              <input type="text" value={this.state.login} onChange={this.handleChangeStationId} />
+          <h3>Enter your station id and key number</h3>
+          <form onSubmit={handleStationIdCheck}>
+            <label>Station id:<p/>
+              <input type="text" value={stateStationId} onChange={handleChangeStationId} />
+            </label>
+            <p/>
+            <label>Station key:<p/>
+              <input type="text" value={stateStationKey} onChange={handleChangeStationKey} />
             </label>
             <p/>
             <input type="submit" value="Send" />
@@ -145,15 +107,14 @@ render(){
         </div>
         : <div className="LoginNeeded">
           <h1>Login required</h1>
-          <button onClick={this.handleGoToLoginPage}>Login</button>
+          <button onClick={switchToLoginPage}>Login</button>
           </div>
 
       }
       
       </div>
     </>
-  );}
+  )
 }
-// technically login needed view should not be needed because in navview page will be unavaible in this case
-export default withRouter(AddStation);
 
+export default AddStation;

@@ -1,29 +1,26 @@
 import React, { useState, useEffect} from "react";
 import { useNavigate } from "react-router";
 
+import invariant from 'invariant';
+
 import {MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import {Icon} from 'leaflet'
 import {Navigation} from 'react-minimal-side-navigation';
 import NavList from "./NavList";
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
+//import * as Bluetooth from 'react-bluetooth';
 //import 'SideNavigation.js'
 
 //https://codereview.stackexchange.com/questions/235854/react-setstate-function-in-useeffect
 
-function Login(props) {
+function ConfigureStation(props) {
 
 
-  const [stateFirstRun,setStateFirstRun] = useState(true);
+  const [stateIsBluetoothSupported,setStateIsBluetoothSupported] = useState(false);
   const [stateLogin,setStateLogin] = useState("");
   const [statePassword,setStatePassword] = useState("");
-
-  const [stateOldPassword,setStateOldPassword] = useState("");
-  const [stateNewPassword,setStateNewPassword] = useState("");
-  const [stateIsOnPasswordChange,setStateIsOnPasswordChange] = useState(false);
-
   const [stateToken,setStateToken] = useState("");
   const [stateIsLoggedIn,setStateIsLoggedIn] = useState(false);
-  
   const navigate = useNavigate();
 
 
@@ -42,7 +39,38 @@ function Login(props) {
 
   }
 
+  const checkBluetoothSupport = async() =>{
+    /*const _navigator = navigator;
+    try{invariant(_navigator.bluetooth, 'This device is not capable of using Bluetooth');}
+    catch{
+      console.log("ERROR");
+    }
+    return _navigator.bluetooth;*/
+    console.log(navigator)
+    navigator.bluetooth.requestDevice({acceptAllDevices: true})
+         .then(device => {
+              console.log(device);
+         });
+    /*navigator.bluetooth.getAvailability().then(available => {
+      if (available){
+          console.log("This device supports Bluetooth!");
+          setStateIsBluetoothSupported(true);
+        }
+      else{
+          console.log("Doh! Bluetooth is not supported");
+          setStateIsBluetoothSupported(false);
+        }
+    });*/
+    /*if (await Bluetooth.getAvailabilityAsync()) {
+      console.log("Bluetooth available")
+    }
+    else{
+      console.log("Bluetooth not available")
+    }*/
+  }
+
   useEffect(() =>{
+    //checkBluetoothSupport();
     console.log("Logged in:"+stateIsLoggedIn)
     let token=localStorage.getItem('token');
     if(typeof(token)==="string"){
@@ -66,14 +94,6 @@ function Login(props) {
 
   const handleChangePassword = event => {
     setStatePassword(event.target.value);
-  }
-  
-  const handleChangeOldPassword = event => {
-    setStateOldPassword(event.target.value);
-  }
-  
-  const handleChangeNewPassword = event => {
-    setStateNewPassword(event.target.value);
   }
 
   const handleLoginUser = event => {
@@ -101,34 +121,6 @@ function Login(props) {
         })
   }
 
-  const handleChangePasswordRequest = event =>{
-    event.preventDefault();
-    const requestParams = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        "oldPassword" : stateOldPassword,
-        "newPassword" : stateNewPassword,
-        "token": stateToken
-    })
-    };
-    //TODO add status check
-
-    fetch(`http://127.0.0.1:8080/api/user/change-password`, requestParams)
-        .then(res => {
-          console.log(res.status)
-            if(res.status==201){
-              setStateIsOnPasswordChange(false);
-              alert("Succesful password change")
-            }
-            else{
-              setStateIsOnPasswordChange(false);              
-              alert("Failed to change password")
-            }
-            
-        })
-  }
-
 
   const handleClickLogout = () =>{
     setStateIsLoggedIn(false);
@@ -136,14 +128,11 @@ function Login(props) {
     localStorage.setItem('token',"");
   }
 
-  const handleClickChangePassword = () =>{
-    setStateIsOnPasswordChange(true);
-  }
 
-  const handleClickRegister = () =>{
-    navigate("/register")
+  const handleClickLogin = () =>{
+    checkBluetoothSupport();
+    //navigate("/login")
   }
-
 
   return (
     <>   
@@ -152,51 +141,23 @@ function Login(props) {
 </div>
 
       <div className="d-flex p-2 col-example">
-      {!stateIsLoggedIn ?
+        <div><p>Bluetooth connection</p></div>
+      {!stateIsBluetoothSupported ?
         <div className="Login">
-
-          
-          <form onSubmit={handleLoginUser}>
-            <label>Login:<p/>
-              <input type="text" value={stateLogin} onChange={handleChangeLogin} />
-            </label>
-            <p/>
-            <label>Password:<p/>
-              <input type="password" value={statePassword} onChange={handleChangePassword} />
-            </label><p/>
-            <input type="submit" value="Login" />
-          </form>
-          <h3>Don't have account?</h3>
+          <h3>You need to login</h3>
           <div>
-            <button onClick={handleClickRegister}>Register</button>
+            <button onClick={handleClickLogin}>Go to login</button>
           </div>
         </div>
-        : <>
+        : <div className="StationList">
+          <div className="my-stations">
+            <p>Bluetooth is here</p>
+            </div>
+            <div className="watched-stations">
 
-        <div className="Profile">
-          {!stateIsOnPasswordChange ? 
-          <>
-          <button onClick={handleClickChangePassword}>Change Password</button>
-          </> 
-          : <>
-          <form onSubmit={handleChangePasswordRequest}>
-            <label>Old password:<p/>
-              <input type="password" value={stateOldPassword} onChange={handleChangeOldPassword} />
-            </label>
-            <p/>
-            <label>New password:<p/>
-              <input type="password" value={stateNewPassword} onChange={handleChangeNewPassword} />
-            </label><p/>
-            <input type="submit" value="Change password" />
-          </form>
-          </>}
-        
-        </div>
-
-        <div className="Logout">
-          <button onClick={handleClickLogout}>Logout</button>
+            </div>
           </div>
-        </>
+
       }
       
       </div>
@@ -204,7 +165,7 @@ function Login(props) {
   )
 }
 
-export default Login;
+export default ConfigureStation;
 
 /*<div className="Login">
         <form onSubmit={this.handleLoginUser}>

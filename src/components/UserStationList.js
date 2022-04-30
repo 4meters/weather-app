@@ -10,20 +10,18 @@ import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 
 //https://codereview.stackexchange.com/questions/235854/react-setstate-function-in-useeffect
 
-function Login(props) {
+function UserStationList(props) {
 
 
   const [stateFirstRun,setStateFirstRun] = useState(true);
   const [stateLogin,setStateLogin] = useState("");
   const [statePassword,setStatePassword] = useState("");
-
-  const [stateOldPassword,setStateOldPassword] = useState("");
-  const [stateNewPassword,setStateNewPassword] = useState("");
-  const [stateIsOnPasswordChange,setStateIsOnPasswordChange] = useState(false);
-
   const [stateToken,setStateToken] = useState("");
   const [stateIsLoggedIn,setStateIsLoggedIn] = useState(false);
-  
+  const [stateMyStationList,setStateMyStationList] = useState([]);
+  const [stateBookmarkStationList,setStateBookmarkStationList] = useState([]);
+
+
   const navigate = useNavigate();
 
 
@@ -44,11 +42,13 @@ function Login(props) {
 
   useEffect(() =>{
     console.log("Logged in:"+stateIsLoggedIn)
+    console.log(stateToken);
     let token=localStorage.getItem('token');
     if(typeof(token)==="string"){
       if(token.length>0){
         setStateToken(localStorage.getItem('token'));
         setStateIsLoggedIn(true);
+        getUserStationList();
       }
       else{
         setStateIsLoggedIn(false);
@@ -59,6 +59,12 @@ function Login(props) {
       }
   }, []) //only on first run, if not it breaks some things with no errors in console
 
+  useEffect(()=>{
+    if(stateIsLoggedIn==true){
+      getUserStationList();
+    }
+    
+  },[stateToken])
 
   const handleChangeLogin = event => {
     setStateLogin(event.target.value);
@@ -67,65 +73,17 @@ function Login(props) {
   const handleChangePassword = event => {
     setStatePassword(event.target.value);
   }
-  
-  const handleChangeOldPassword = event => {
-    setStateOldPassword(event.target.value);
-  }
-  
-  const handleChangeNewPassword = event => {
-    setStateNewPassword(event.target.value);
-  }
 
-  const handleLoginUser = event => {
-    event.preventDefault();
-    console.log(stateLogin)
-    console.log(statePassword)
-    const requestParams = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        "login" : stateLogin,
-        "password" : statePassword
-    })
-    };
+  const getUserStationList = event => {
     //TODO add status check
-
-    fetch(`http://127.0.0.1:8080/api/user/login`, requestParams)
+    //TODO empty list catch
+    //fetch(`http://127.0.0.1:8080/api/user/get-user-stationlist/`+stateToken)
+    fetch(`http://127.0.0.1:8080/api/user/get-user-stationlist/`+stateToken)
         .then(res => res.json())
         .then(response => {
-            console.log(response['token']);
-            let token = response['token']
-            setStateToken(token);
-            setStateIsLoggedIn(true);
-            localStorage.setItem('token', token);
-        })
-  }
-
-  const handleChangePasswordRequest = event =>{
-    event.preventDefault();
-    const requestParams = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        "oldPassword" : stateOldPassword,
-        "newPassword" : stateNewPassword,
-        "token": stateToken
-    })
-    };
-    //TODO add status check
-
-    fetch(`http://127.0.0.1:8080/api/user/change-password`, requestParams)
-        .then(res => {
-          console.log(res.status)
-            if(res.status==201){
-              setStateIsOnPasswordChange(false);
-              alert("Succesful password change")
-            }
-            else{
-              setStateIsOnPasswordChange(false);              
-              alert("Failed to change password")
-            }
-            
+            setStateMyStationList(response['myStationList'])
+            setStateBookmarkStationList(response['bookmarkStationList'])
+            //console.log(response)
         })
   }
 
@@ -136,14 +94,110 @@ function Login(props) {
     localStorage.setItem('token',"");
   }
 
-  const handleClickChangePassword = () =>{
-    setStateIsOnPasswordChange(true);
+
+  const handleClickLogin = () =>{
+    navigate("/login")
   }
 
-  const handleClickRegister = () =>{
-    navigate("/register")
+  const handleStationModeButton=(event) =>{
+    switchStationModeRequest(event.target.value)
   }
 
+  const handleChangeMeasureInterval = (measureInterval, stationId) =>{
+    console.log(measureInterval, stationId)
+    setMeasureIntervalRequest(measureInterval, stationId)
+  }
+
+  const switchStationModeRequest=(data)=>{
+    data=JSON.parse(data)
+    const requestParams = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        "token": stateToken,
+        "stationId" : data['stationId'],
+        "mode": data['mode']
+    })
+    };
+    fetch(`http://127.0.0.1:8080/api/station/mode-switch`,requestParams)
+    .then(response => {
+      if(response.status===200){
+        getUserStationList();
+      }
+    })
+
+  }
+
+  const setMeasureIntervalRequest=(measureInterval, stationId)=>{
+    const requestParams = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        "token": stateToken,
+        "stationId" : stationId,
+        "measureInterval": measureInterval
+    })
+    };
+    fetch(`http://127.0.0.1:8080/api/station/set-measure-interval`,requestParams)
+    .then(response => {
+      if(response.status===200){
+        getUserStationList();
+      }
+    })
+
+  }
+
+  const renderStationItem = (data) =>{//TODO add idx id div
+    console.log(data)
+    console.log(data[0]['active'])
+    return (<div style={{
+      backgroundColor: '#DDDDDD'
+    }}>
+    <h3>{data[0]['stationName']}</h3>
+    <p>{data[0]['stationId']}</p>
+    {data[0]['visible']?<p id="visibility">Public</p> :
+    <p id="visibility">Private</p> }
+
+    <button>Show on map</button>
+    {
+      data[0]['active']? <button value={'{"stationId":"'+data[0]['stationId']+'", "mode": "disable"}'} onClick={handleStationModeButton}>Disable measures</button>
+      : <button value={'{"stationId":"'+data[0]['stationId']+'", "mode": "enable"}'} onClick={handleStationModeButton}>Enable measures</button>
+    }
+    <select name="measureInterval" id="measureInterval" onChange={(event)=>handleChangeMeasureInterval(event.target.value, data[0]['stationId'])} value={data[0]['measureInterval']} >
+        <option value="3min">3min</option>
+        <option value="5min">5min</option>
+        <option value="10min">10min</option>
+        <option value="15min">15min</option>
+      </select>
+
+    </div>)
+  }
+
+  const renderBookmarkStationItem = (data) =>{//TODO add idx id div
+    console.log(data)
+    console.log(data[0]['active'])
+    return (<div style={{
+      backgroundColor: '#DDDDDD'
+    }}>
+    <h3>{data[0]['stationName']}</h3>
+    <p>{data[0]['stationId']}</p>
+    {data[0]['visible']?<p id="visibility">Public</p> :
+    <p id="visibility">Private</p> }
+
+    <button>Show on map</button>
+    {
+      data[0]['active'] ? <><p>Enabled</p></> : <><p>Disabled</p></>
+    }
+    </div>)
+  }
+
+  const renderStationItemList = (stationlist) =>{
+    return (stationlist.map(()=>renderStationItem(stationlist)))
+  }
+
+  const renderBookmarkStationItemList = (stationlist) =>{
+    return (stationlist.map(()=>renderBookmarkStationItem(stationlist)))
+  }
 
   return (
     <>   
@@ -154,49 +208,32 @@ function Login(props) {
       <div className="d-flex p-2 col-example">
       {!stateIsLoggedIn ?
         <div className="Login">
-
-          
-          <form onSubmit={handleLoginUser}>
-            <label>Login:<p/>
-              <input type="text" value={stateLogin} onChange={handleChangeLogin} />
-            </label>
-            <p/>
-            <label>Password:<p/>
-              <input type="password" value={statePassword} onChange={handleChangePassword} />
-            </label><p/>
-            <input type="submit" value="Login" />
-          </form>
-          <h3>Don't have account?</h3>
+          <h3>You need to login</h3>
           <div>
-            <button onClick={handleClickRegister}>Register</button>
+            <button onClick={handleClickLogin}>Go to login</button>
           </div>
         </div>
-        : <>
-
-        <div className="Profile">
-          {!stateIsOnPasswordChange ? 
-          <>
-          <button onClick={handleClickChangePassword}>Change Password</button>
-          </> 
-          : <>
-          <form onSubmit={handleChangePasswordRequest}>
-            <label>Old password:<p/>
-              <input type="password" value={stateOldPassword} onChange={handleChangeOldPassword} />
-            </label>
-            <p/>
-            <label>New password:<p/>
-              <input type="password" value={stateNewPassword} onChange={handleChangeNewPassword} />
-            </label><p/>
-            <input type="submit" value="Change password" />
-          </form>
-          </>}
-        
-        </div>
-
-        <div className="Logout">
-          <button onClick={handleClickLogout}>Logout</button>
+        : <div className="StationList">
+          <div className="my-stations">
+            <h2>My stations</h2>
+            {stateMyStationList.length>0 ? 
+            <>{renderStationItemList(stateMyStationList)}</>
+            :
+            <><p>(Empty list)</p>
+            </>
+            }
+            </div>
+            <div className="watched-stations">
+            <h2>Bookmarks</h2>
+            {stateBookmarkStationList.length>0 ? 
+            <>{renderBookmarkStationItemList(stateBookmarkStationList)}</>
+            :
+            <><p>(Empty list)</p>
+            </>
+            }
+            </div>
           </div>
-        </>
+
       }
       
       </div>
@@ -204,7 +241,7 @@ function Login(props) {
   )
 }
 
-export default Login;
+export default UserStationList;
 
 /*<div className="Login">
         <form onSubmit={this.handleLoginUser}>

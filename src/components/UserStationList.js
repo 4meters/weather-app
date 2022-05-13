@@ -6,6 +6,12 @@ import {Icon} from 'leaflet'
 import {Navigation} from 'react-minimal-side-navigation';
 import NavList from "./NavList";
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
+import Flex from '@react-css/flex'
+import {AiFillEdit} from "react-icons/ai";
+
+import EdiText from 'react-editext';
+ 
+
 //import 'SideNavigation.js'
 
 //https://codereview.stackexchange.com/questions/235854/react-setstate-function-in-useeffect
@@ -108,6 +114,16 @@ function UserStationList(props) {
     setMeasureIntervalRequest(measureInterval, stationId)
   }
 
+  const handleChangeVisibility = (visibility, stationId) =>{
+    console.log(visibility, stationId)
+    if(visibility==="true"){
+      setVisibilityRequest(true, stationId)
+    }
+    else{
+      setVisibilityRequest(false, stationId)
+    }
+  }
+
   const switchStationModeRequest=(data)=>{
     data=JSON.parse(data)
     const requestParams = {
@@ -147,56 +163,101 @@ function UserStationList(props) {
 
   }
 
-  const renderStationItem = (data) =>{//TODO add idx id div
-    console.log(data)
-    console.log(data[0]['active'])
-    return (<div style={{
-      backgroundColor: '#DDDDDD'
-    }}>
-    <h3>{data[0]['stationName']}</h3>
-    <p>{data[0]['stationId']}</p>
-    {data[0]['visible']?<p id="visibility">Public</p> :
-    <p id="visibility">Private</p> }
+  const setVisibilityRequest=(visibility, stationId)=>{
+    const requestParams = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        "token": stateToken,
+        "stationId" : stationId,
+        "visibility": visibility
+    })
+    };
+    fetch(`http://127.0.0.1:8080/api/station/set-visibility`,requestParams)
+    .then(response => {
+      if(response.status===200){
+        getUserStationList();
+      }
+    })
 
-    <button>Show on map</button>
-    {
-      data[0]['active']? <button value={'{"stationId":"'+data[0]['stationId']+'", "mode": "disable"}'} onClick={handleStationModeButton}>Disable measures</button>
-      : <button value={'{"stationId":"'+data[0]['stationId']+'", "mode": "enable"}'} onClick={handleStationModeButton}>Enable measures</button>
-    }
-    <select name="measureInterval" id="measureInterval" onChange={(event)=>handleChangeMeasureInterval(event.target.value, data[0]['stationId'])} value={data[0]['measureInterval']} >
-        <option value="3min">3min</option>
-        <option value="5min">5min</option>
-        <option value="10min">10min</option>
-        <option value="15min">15min</option>
+  }
+
+  const handleSaveStationName = (newStationName, data) =>{
+    const requestParams = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        "token": stateToken,
+        "stationId" : data['stationId'],
+        "newStationName": newStationName
+    })
+    };
+    fetch(`http://127.0.0.1:8080/api/station/change-station-name`,requestParams)
+    .then(response => {
+      if(response.status===200){
+        getUserStationList();
+      }
+    })
+  }
+
+  //const renderStationItem = (data,idx) =>
+
+  //const renderBookmarkStationItem = (data,idx) =>
+
+  const renderMyStationItemList = (stationlist) =>{
+    return (stationlist.map((data,idx)=>{//TODO add idx id div
+      console.log(data)
+      return (<div key={idx} style={{
+        backgroundColor: '#DDDDDD'
+      }}>
+        <div style={{
+      backgroundColor: "#cccc",
+      maxWidth: "400px"
+        }}>
+          <h3><EdiText value={data['stationName']} onSave={(value)=>handleSaveStationName(value, data)}/></h3>
+          </div>
+        
+      <p>{data['stationId']}</p>
+      {data['visible']?<p id="visibility">Publiczna</p> :
+      <p id="visibility">Prywatna</p> }
+  
+      <button>Pokaż na mapie</button>
+      {
+        data['active']? <button value={'{"stationId":"'+data['stationId']+'", "mode": "disable"}'} onClick={handleStationModeButton}>Wyłącz pomiary</button>
+        : <button value={'{"stationId":"'+data['stationId']+'", "mode": "enable"}'} onClick={handleStationModeButton}>Włącz pomiary</button>
+      }
+      <select name="measureInterval" id="measureInterval" onChange={(event)=>handleChangeMeasureInterval(event.target.value, data['stationId'])} value={data['measureInterval']} >
+          <option value="3min">3min</option>
+          <option value="5min">5min</option>
+          <option value="10min">10min</option>
+          <option value="15min">15min</option>
+        </select>
+      <select name="visibility" id="visibility" onChange={(event)=>handleChangeVisibility(event.target.value, data['stationId'])} value={data['visible']} >
+          <option value="true">Publiczna</option>
+          <option value="false">Prywatna</option>
       </select>
-
-    </div>)
-  }
-
-  const renderBookmarkStationItem = (data) =>{//TODO add idx id div
-    console.log(data)
-    console.log(data[0]['active'])
-    return (<div style={{
-      backgroundColor: '#DDDDDD'
-    }}>
-    <h3>{data[0]['stationName']}</h3>
-    <p>{data[0]['stationId']}</p>
-    {data[0]['visible']?<p id="visibility">Public</p> :
-    <p id="visibility">Private</p> }
-
-    <button>Show on map</button>
-    {
-      data[0]['active'] ? <><p>Enabled</p></> : <><p>Disabled</p></>
-    }
-    </div>)
-  }
-
-  const renderStationItemList = (stationlist) =>{
-    return (stationlist.map(()=>renderStationItem(stationlist)))
+  
+      </div>)
+    }))
   }
 
   const renderBookmarkStationItemList = (stationlist) =>{
-    return (stationlist.map(()=>renderBookmarkStationItem(stationlist)))
+    return (stationlist.map((data,idx)=>{
+      console.log(data)
+      return (<div key={idx} style={{
+        backgroundColor: '#DDDDDD'
+      }}>
+      <h3>{data['stationName']}</h3>
+      <p>{data['stationId']}</p>
+      {data['visible']?<p id="visibility">Publiczna</p> :
+      <p id="visibility">Prywatna</p> }
+  
+      <button>Pokaż na mapie</button>
+      {
+        data['active'] ? <><p>Enabled</p></> : <><p>Disabled</p></>
+      }
+      </div>)
+    }))
   }
 
   return (
@@ -208,23 +269,23 @@ function UserStationList(props) {
       <div className="d-flex p-2 col-example">
       {!stateIsLoggedIn ?
         <div className="Login">
-          <h3>You need to login</h3>
+          <h3>Musisz się zalogować</h3>
           <div>
             <button onClick={handleClickLogin}>Go to login</button>
           </div>
         </div>
         : <div className="StationList">
           <div className="my-stations">
-            <h2>My stations</h2>
+            <h2>Moje stacje</h2>
             {stateMyStationList.length>0 ? 
-            <>{renderStationItemList(stateMyStationList)}</>
+            <>{renderMyStationItemList(stateMyStationList)}</>
             :
             <><p>(Empty list)</p>
             </>
             }
             </div>
             <div className="watched-stations">
-            <h2>Bookmarks</h2>
+            <h2>Zakładki</h2>
             {stateBookmarkStationList.length>0 ? 
             <>{renderBookmarkStationItemList(stateBookmarkStationList)}</>
             :
@@ -242,148 +303,3 @@ function UserStationList(props) {
 }
 
 export default UserStationList;
-
-/*<div className="Login">
-        <form onSubmit={this.handleLoginUser}>
-          <label>Login:<p/>
-            <input type="text" value={this.state.login} onChange={this.handleChangeLogin} />
-          </label>
-          <p/>
-          <label>Password:<p/>
-            <input type="text" value={this.state.password} onChange={this.handleChangePassword} />
-          </label><p/>
-          <input type="submit" value="Login" />
-        </form>
-      </div> */
-/*
-
-import React, { useState } from "react";
-
-import Form from "react-bootstrap/Form";
-
-import Button from "react-bootstrap/Button";
-
-import "./Login.css";
-
-export default function Login() {
-
-  const [email, setEmail] = useState("");
-
-  const [password, setPassword] = useState("");
-
-  function validateForm() {
-
-    return email.length > 0 && password.length > 0;
-
-  }
-
-  function handleSubmit(event) {
-
-    event.preventDefault();
-
-  }
-
-  return (
-
-    <div className="Login">
-
-      <Form onSubmit={handleSubmit}>
-
-        <Form.Group size="lg" controlId="email">
-
-          <Form.Label>Email</Form.Label>
-
-          <Form.Control
-
-            autoFocus
-
-            type="email"
-
-            value={email}
-
-            onChange={(e) => setEmail(e.target.value)}
-
-          />
-
-        </Form.Group>
-
-        <Form.Group size="lg" controlId="password">
-
-          <Form.Label>Password</Form.Label>
-
-          <Form.Control
-
-            type="password"
-
-            value={password}
-
-            onChange={(e) => setPassword(e.target.value)}
-
-          />
-
-        </Form.Group>
-
-        <Button block size="lg" type="submit" disabled={!validateForm()}>
-
-          Login
-
-        </Button>
-
-      </Form>
-
-    </div>
-
-  );
-
-}
-/*for(let el of stationList){
-                let markerPosition=[el['geolocationCoordinateN'], el['geolocationCoordinateE']];
-                markers.push(markerPosition);
-              }*/
-
-/*this.state [markers, setMarkers] = useState([
-    {
-      position: { lng: -122.673447, lat: 45.5225581 },
-      text: "Voodoo Doughnut"
-    }
-  ]);*/
-
-/*handleClick = () => {
-    setMarkers([
-      {
-        position: { lng: -110.673447, lat: 40.5225581 },
-        text: "Voodoo Doughnut"
-      },
-      {
-        position: { lng: -110.6781446, lat: 40.5225512 },
-        text: "Bailey's Taproom"
-      },
-      {
-        position: { lng: -110.67535700000002, lat: 40.5192743 },
-        text: "Barista"
-      }
-    ]);
-  };*/
-
-  /*    
-          /*for(let el of stationList){
-                let markerPosition=[el['geolocationCoordinateN'], el['geolocationCoordinateE']];
-                markers.push(markerPosition);
-              }*/
-          /*    let size = stationList['stationList'].length;
-              for(var i = 0; i < size ; i++){
-                let item = stationList['stationList'][i];
-                var markerPosition=[item['geolocationCoordinateN'], item['geolocationCoordinateE'], item['stationId']];
-                markers.push(markerPosition);
-              }
-              console.log(stationList);
-              console.log(markers);
-              this.setState({
-                  ...this.state,
-                  stationList
-              });
-              this.setState({
-                ...this.state,
-                markers
-            });
-          })*/

@@ -154,37 +154,38 @@ function Login(props) {
       <div className="d-flex p-2 col-example">
       {!stateIsLoggedIn ?
         <div className="Login">
-
+          <h1>Logowanie</h1>
           
           <form onSubmit={handleLoginUser}>
             <label>Login:<p/>
               <input type="text" value={stateLogin} onChange={handleChangeLogin} />
             </label>
             <p/>
-            <label>Password:<p/>
+            <label>Hasło:<p/>
               <input type="password" value={statePassword} onChange={handleChangePassword} />
             </label><p/>
-            <input type="submit" value="Login" />
+            <input type="submit" value="Zaloguj się" />
           </form>
-          <h3>Don't have account?</h3>
+          <h3>Nie posiadasz konta?</h3>
           <div>
-            <button onClick={handleClickRegister}>Register</button>
+            <button onClick={handleClickRegister}>Zajerestruj się</button>
           </div>
         </div>
         : <>
 
         <div className="Profile">
+          <h1>Konto użytkownika</h1>
           {!stateIsOnPasswordChange ? 
           <>
-          <button onClick={handleClickChangePassword}>Change Password</button>
+          <button onClick={handleClickChangePassword}>Zmień hasło</button>
           </> 
           : <>
           <form onSubmit={handleChangePasswordRequest}>
-            <label>Old password:<p/>
+            <label>Stare hasło:<p/>
               <input type="password" value={stateOldPassword} onChange={handleChangeOldPassword} />
             </label>
             <p/>
-            <label>New password:<p/>
+            <label>Nowe hasło:<p/>
               <input type="password" value={stateNewPassword} onChange={handleChangeNewPassword} />
             </label><p/>
             <input type="submit" value="Change password" />
@@ -194,7 +195,7 @@ function Login(props) {
         </div>
 
         <div className="Logout">
-          <button onClick={handleClickLogout}>Logout</button>
+          <button onClick={handleClickLogout}>Wyloguj się</button>
           </div>
         </>
       }

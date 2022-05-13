@@ -249,7 +249,7 @@ return (markers.map((data, idx) => {
   return (
     <Marker key={`marker-${idx}`} position={[data[0], data[1]]}>
            <Popup>
-             <p>Station id: {data[2]} </p>
+             <p>Id stacji: {data[2]} </p>
              <p>N: {data[0]}</p>
              <p>E: {data[1]}</p>
            </Popup>
@@ -286,8 +286,8 @@ const onChangeRadioButtonsVisibility = event =>{
     <NavList/>
     </div>
       <div className="d-flex p-2 col-example">
-        <h3>Select location of your weather station</h3>
-        <MapContainer center={position} zoom={12} style={mapStyle} maxZoom={18} zoomControl={false}>
+        <h3>Wybierz lokalizację swojej stacji pogodowej</h3>
+        <MapContainer center={position} zoom={10} style={mapStyle} maxZoom={18} zoomControl={false}>
           <MyComponent saveMarker={saveMarker}/>
         <TileLayer
           url="http://{s}.tile.osm.org/{z}/{x}/{y}.png"
@@ -297,19 +297,19 @@ const onChangeRadioButtonsVisibility = event =>{
         {stateAddedNewMarker ?
         <Marker key='new-marker' position={stateNewMarker}>
           <Popup>
-            <h3>Location of new station:</h3>
+            <h3>Lokalizacja nowej stacji:</h3>
             <p>N: {position[0]}</p>
             <p>E: {position[1]}</p>
-            {!stateNewMarkerConfirmed ? <button onClick={confirmNewMarker}>Confirm location</button> : <></>}
+            {!stateNewMarkerConfirmed ? <button onClick={confirmNewMarker}>Potwierdź lokalizację</button> : <></>}
             <div>
               {stateNewMarkerConfirmed ?
               
             <div>
               <form onSubmit={handleAddStationFinalRequest}>
-                <label>Enter station public name:<p/>
+                <label>Podaj nazwę stacji:<p/>
                   <input type="text" value={stateNewStationName} onChange={handleChangeNewStationName} />
                 </label>
-                <p><b>Visibility:</b></p><p/>
+                <p><b>Widoczność:</b></p><p/>
 
 
 
@@ -321,7 +321,7 @@ const onChangeRadioButtonsVisibility = event =>{
                       checked={stateNewStationVisibility === true}
                       onChange={onChangeRadioButtonsVisibility}
                     />
-                    Public
+                    Publiczna
                   </label>
                 </div>
                 <div className="radio">
@@ -332,10 +332,10 @@ const onChangeRadioButtonsVisibility = event =>{
                       checked={stateNewStationVisibility === false}
                       onChange={onChangeRadioButtonsVisibility}
                     />
-                    Private
+                    Prywatna
                   </label>
                 </div>
-                <input type="submit" value="Final confirm" />
+                <input type="submit" value="Potwierdź" />
               </form>
               </div> : <></>}</div>
           </Popup>
@@ -344,11 +344,6 @@ const onChangeRadioButtonsVisibility = event =>{
         
         <ZoomControl position="bottomright"/>
       </MapContainer>
-      <Link to="/login" className="btn btn-primary">Login</Link>
-      </div>
-      <div className="d-flex p-2 col-example">
-        <p>test</p>
-        <p>test2</p>
       </div>
       </div>
     </>

@@ -91,23 +91,23 @@ function AddStation(props) {
       <div className="d-flex p-2 col-example">
       {stateIsLoggedIn ?
         <div className="Add-station">
-          <h1>Add new station</h1>
-          <h3>Enter your station id and key number</h3>
+          <h1>Dodaj nową stację</h1>
+          <h3>Podaj id stacji i klucz stacji</h3>
           <form onSubmit={handleStationIdCheck}>
-            <label>Station id:<p/>
+            <label>Id stacji:<p/>
               <input type="text" value={stateStationId} onChange={handleChangeStationId} />
             </label>
             <p/>
-            <label>Station key:<p/>
+            <label>Klucz stacji:<p/>
               <input type="text" value={stateStationKey} onChange={handleChangeStationKey} />
             </label>
             <p/>
-            <input type="submit" value="Send" />
+            <input type="submit" value="Wyślij" />
           </form>
         </div>
         : <div className="LoginNeeded">
-          <h1>Login required</h1>
-          <button onClick={switchToLoginPage}>Login</button>
+          <h1>Wymagane zalogowanie</h1>
+          <button onClick={switchToLoginPage}>Zaloguj się</button>
           </div>
 
       }

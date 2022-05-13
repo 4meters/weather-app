@@ -88,6 +88,7 @@ function Register(props) {
 </div>
 
       <div className="d-flex p-2 col-example">
+      <h1>Rejestracja</h1>
       {!stateIsRegistered ?
         <div className="Login">
           <form onSubmit={handleRegisterUser}>
@@ -95,19 +96,19 @@ function Register(props) {
               <input type="text" value={stateLogin} onChange={handleChangeLogin} />
             </label>
             <p/>
-            <label>Password:<p/>
+            <label>Hasło:<p/>
               <input type="password" value={statePassword} onChange={handleChangePassword} />
             </label><p/>
-            <input type="submit" value="Register" />
+            <input type="submit" value="Zarejestruj" />
           </form>
           <div>
           {stateIsFailedRegister ?
             <div><h2>Register failed</h2></div>
             : <> </>
           }</div>
-          <h3>Already have account?</h3>
+          <h3>Posiadasz już konto?</h3>
           <div>
-            <button onClick={handleClickLogin}>Login</button>
+            <button onClick={handleClickLogin}>Zaloguj się</button>
           </div>
           
         </div>

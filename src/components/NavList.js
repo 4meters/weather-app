@@ -20,30 +20,30 @@ function NavList() {
           }}
           items={[
             {
-              title: 'Map',
+              title: 'Mapa',
               itemId: '/',
               // you can use your own custom Icon component as well
               // icon is optional
               elemBefore: () => <></>,
             },
             {
-              title: 'Login',
+              title: 'Logowanie',
               itemId: '/login',
               elemBefore: () => <></>,
             },
             {
-              title: 'Station list',
+              title: 'Lista stacji',
               itemId: '/station-list',
               elemBefore: () => <></>,
             },
             {
-              title: 'Add station',
+              title: 'Dodaj stację',
               itemId: '/add-station',
               elemBefore: () => <></>,
             },
             {
-              title: 'Statistics',
-              itemId: '/statistics',
+              title: 'Dane archiwalne',
+              itemId: '/archival-data',
               elemBefore: () => <></>,
             },
           ]}

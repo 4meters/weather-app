@@ -175,8 +175,8 @@ export default class Chart extends PureComponent {
     let unitYAxisMapper={"temp": "°C",
                         "humidity": "%",
                         "pressure": "hPa",
-                        "pm25": "µg/m³",
-                        "pm25Corr": "µg/m³",
+                        "pm2.5": "µg/m³",
+                        "pm2.5Corr": "µg/m³",
                         "pm10": "µg/m³"}
     //console.log(event.target.value)
     this.setState({
@@ -194,7 +194,7 @@ export default class Chart extends PureComponent {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          "apiKey" : "DH1_D3JJ9WCWBLIFYBSWN5T68GSM7W_C",
+          "token" : "DH1_D3JJ9WCWBLIFYBSWN5T68GSM7W_C",
           "stationId": this.state.stationId,
           "dateFrom" : this.state.dateStart.toISOString(),
           "dateTo" : this.state.dateEnd.toISOString(),
@@ -226,26 +226,26 @@ export default class Chart extends PureComponent {
       <DateTimePicker onChange={this.onChangeDateStart} value={this.state.dateStart} />
       </div>
       <select name="chartType" id="chartType" onChange={this.onChangeChartType} value={this.state.chartType} >
-        <option value="max">max</option>
-        <option value="avg">avg</option>
-        <option value="min">min</option>
+        <option value="max">maksimum</option>
+        <option value="avg">średnia</option>
+        <option value="min">minimum</option>
       </select>
       <select name="chartValue" id="chartValue" onChange={this.onChangeChartValue} value={this.state.chartValue} >
-        <option value="temp">Temperature</option>
-        <option value="humidity">Humidity</option>
-        <option value="pressure">Pressure</option>
+        <option value="temp">Temperatura</option>
+        <option value="humidity">Wilgotność</option>
+        <option value="pressure">Ciśnienie powietrza</option>
+        <option value="pm25">PM2.5</option>
         <option value="pm10">PM10</option>
-        <option value="pm25">PM25</option>
-        <option value="pm25Corr">PM25 Corrected</option>
+        <option value="pm25Corr">PM2.5 z korekcją</option>
       </select>
       <div>
       <DateTimePicker onChange={this.onChangeDateEnd} value={this.state.dateEnd} />
       </div>
       <div id="dateButtons">
-        <button onClick={()=>this.handleDateButton("this month")}>This month</button>
-        <button onClick={()=>this.handleDateButton("this week")}>This week</button>
-        <button onClick={()=>this.handleDateButton("yesterday")}>Yesterday</button>
-        <button onClick={()=>this.handleDateButton("today")}>Today</button>
+        <button onClick={()=>this.handleDateButton("this month")}>Obecny miesiąc</button>
+        <button onClick={()=>this.handleDateButton("this week")}>Obecny tydzień</button>
+        <button onClick={()=>this.handleDateButton("yesterday")}>Wczoraj</button>
+        <button onClick={()=>this.handleDateButton("today")}>Dzisiaj</button>
       </div>
       <div>
       <AreaChart

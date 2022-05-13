@@ -6,7 +6,7 @@ import Login from "./components/Login";
 import Register from  "./components/Register";
 import AddStation from "./components/AddStation"
 import AddStationOnMap from "./components/AddStationOnMap"
-import Statistics from "./components/Statistics";
+import ArchivalData from "./components/ArchivalData";
 import UserStationList from "./components/UserStationList"
 
 class _Routes extends React.Component{
@@ -26,7 +26,7 @@ class _Routes extends React.Component{
                     </Route>
                     <Route path="/station-list" element={<UserStationList/>}>
                     </Route>
-                    <Route path="/statistics" element={<Statistics/>}>
+                    <Route path="/archival-data" element={<ArchivalData/>}>
                     </Route>
                 </Routes>
             </BrowserRouter>

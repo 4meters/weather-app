@@ -12,7 +12,7 @@ import {useSearchParams} from 'react-router-dom';
 
 //https://codereview.stackexchange.com/questions/235854/react-setstate-function-in-useeffect
 
-function Statistics(props) {
+function ArchivalData(props) {
 
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -61,7 +61,7 @@ function Statistics(props) {
           </>
           :
           <>
-          <h2>You need to select 'archival data' from station marker on map</h2>
+          <h2>Musisz wybrać 'dane archiwalne' z znacznika stacji na mapie</h2>
           </>
           }
           
@@ -72,5 +72,5 @@ function Statistics(props) {
   )
 }
 
-export default Statistics;
+export default ArchivalData;
 

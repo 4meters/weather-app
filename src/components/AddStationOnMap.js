@@ -9,6 +9,8 @@ import NavList from "./NavList";
 
 import {useNavigate, useSearchParams} from "react-router-dom";
 
+import {BASE_SERVER_URL} from '../ServerURL'
+
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -22,7 +24,7 @@ const mapStyle = { height: "90vh" };
 
 let position = [50.068, 21.255]
 
-import {BASE_SERVER_URL} from '../ServerURL'
+
 
 function AddStationOnMap(props){
   

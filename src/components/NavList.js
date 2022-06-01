@@ -13,7 +13,6 @@ function NavList() {
     return (
       <>
         <Navigation
-          // you can use your own router's api to get pathname
           activeItemId={location.pathname}
           onSelect={({itemId}) => {
             navigate(itemId);
@@ -22,8 +21,6 @@ function NavList() {
             {
               title: 'Mapa',
               itemId: '/',
-              // you can use your own custom Icon component as well
-              // icon is optional
               elemBefore: () => <></>,
             },
             {
@@ -44,6 +41,11 @@ function NavList() {
             {
               title: 'Dane archiwalne',
               itemId: '/archival-data',
+              elemBefore: () => <></>,
+            },
+            {
+              title: 'Konfiguracja stacji',
+              itemId: '/configure-station',
               elemBefore: () => <></>,
             },
           ]}

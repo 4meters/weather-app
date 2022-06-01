@@ -1,31 +1,27 @@
 import React, { useState, useEffect} from "react";
 import { useNavigate } from "react-router";
 
-import {MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import {Icon} from 'leaflet'
-import {Navigation} from 'react-minimal-side-navigation';
 import NavList from "./NavList";
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 import Flex from '@react-css/flex'
 import {AiFillEdit} from "react-icons/ai";
 
 import EdiText from 'react-editext';
+
  
 
-//import 'SideNavigation.js'
 
 //https://codereview.stackexchange.com/questions/235854/react-setstate-function-in-useeffect
 
 function UserStationList(props) {
 
-
-  const [stateFirstRun,setStateFirstRun] = useState(true);
-  const [stateLogin,setStateLogin] = useState("");
-  const [statePassword,setStatePassword] = useState("");
   const [stateToken,setStateToken] = useState("");
   const [stateIsLoggedIn,setStateIsLoggedIn] = useState(false);
   const [stateMyStationList,setStateMyStationList] = useState([]);
   const [stateBookmarkStationList,setStateBookmarkStationList] = useState([]);
+
+  //const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
+  const BASE_SERVER_URL = "http://127.0.0.1:8080"
 
 
   const navigate = useNavigate();
@@ -35,26 +31,14 @@ function UserStationList(props) {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
   }
 
-  const validateLoginData = () => {
-
-    if(stateLogin>0 && statePassword>0){
-      return true;
-    }
-    else{
-      return false;
-    }
-
-  }
 
   useEffect(() =>{
     console.log("Logged in:"+stateIsLoggedIn)
-    console.log(stateToken);
     let token=localStorage.getItem('token');
     if(typeof(token)==="string"){
       if(token.length>0){
         setStateToken(localStorage.getItem('token'));
         setStateIsLoggedIn(true);
-        getUserStationList();
       }
       else{
         setStateIsLoggedIn(false);
@@ -63,7 +47,7 @@ function UserStationList(props) {
     else{
       setStateIsLoggedIn(false);
       }
-  }, []) //only on first run, if not it breaks some things with no errors in console
+  }, [])
 
   useEffect(()=>{
     if(stateIsLoggedIn==true){
@@ -72,19 +56,13 @@ function UserStationList(props) {
     
   },[stateToken])
 
-  const handleChangeLogin = event => {
-    setStateLogin(event.target.value);
-  }
+  
 
-  const handleChangePassword = event => {
-    setStatePassword(event.target.value);
-  }
-
-  const getUserStationList = event => {
+  const getUserStationList = () => {
     //TODO add status check
     //TODO empty list catch
     //fetch(`http://127.0.0.1:8080/api/user/get-user-stationlist/`+stateToken)
-    fetch(`http://127.0.0.1:8080/api/user/get-user-stationlist/`+stateToken)
+    fetch(BASE_SERVER_URL+`/api/user/get-user-stationlist/`+stateToken)
         .then(res => res.json())
         .then(response => {
             setStateMyStationList(response['myStationList'])
@@ -103,6 +81,21 @@ function UserStationList(props) {
 
   const handleClickLogin = () =>{
     navigate("/login")
+  }
+
+  const handleClickShowOnMap = (stationId) =>{
+    navigate("/?stationId="+stationId)
+  }
+
+  const handleRemoveStationButton = (stationId) =>{
+    let result = window.confirm("Czy na pewno chcesz usunąć stację pogodową?\nWszystkie wyniki pomiarów zostaną również usunięte.")
+    console.log(stationId)
+    if(result){
+      removeStationRequest(stationId)
+    }
+    else{
+      alert("Stacja pogodowa nie została usunięta")
+    }
   }
 
   const handleStationModeButton=(event) =>{
@@ -124,6 +117,35 @@ function UserStationList(props) {
     }
   }
 
+  const removeStationRequest=(stationId)=>{
+    //data=JSON.parse(data)
+    const requestParams = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        "token": stateToken,
+        "stationId" : stationId,
+        "removeMeasures": true
+    })
+    };
+    fetch(BASE_SERVER_URL+`/api/user/remove-station`,requestParams)
+    .then(response => {
+      if(response.status===200){
+        //getUserList();
+        alert("Stacja pogodowa została usunięta")
+        getUserStationList();
+      }
+      else{
+        throw new Error(response.status)
+      }
+    })
+    .catch((error)=>{
+      console.log('error: '+error)
+      alert("Nie udało się usunąć stacji pogodowej z bazy danych")
+    })
+
+  }
+
   const switchStationModeRequest=(data)=>{
     data=JSON.parse(data)
     const requestParams = {
@@ -135,7 +157,7 @@ function UserStationList(props) {
         "mode": data['mode']
     })
     };
-    fetch(`http://127.0.0.1:8080/api/station/mode-switch`,requestParams)
+    fetch(BASE_SERVER_URL+`/api/station/mode-switch`,requestParams)
     .then(response => {
       if(response.status===200){
         getUserStationList();
@@ -154,7 +176,7 @@ function UserStationList(props) {
         "measureInterval": measureInterval
     })
     };
-    fetch(`http://127.0.0.1:8080/api/station/set-measure-interval`,requestParams)
+    fetch(BASE_SERVER_URL+`/api/station/set-measure-interval`,requestParams)
     .then(response => {
       if(response.status===200){
         getUserStationList();
@@ -173,7 +195,7 @@ function UserStationList(props) {
         "visibility": visibility
     })
     };
-    fetch(`http://127.0.0.1:8080/api/station/set-visibility`,requestParams)
+    fetch(BASE_SERVER_URL+`/api/station/set-visibility`,requestParams)
     .then(response => {
       if(response.status===200){
         getUserStationList();
@@ -192,7 +214,7 @@ function UserStationList(props) {
         "newStationName": newStationName
     })
     };
-    fetch(`http://127.0.0.1:8080/api/station/change-station-name`,requestParams)
+    fetch(BASE_SERVER_URL+`/api/station/change-station-name`,requestParams)
     .then(response => {
       if(response.status===200){
         getUserStationList();
@@ -200,9 +222,8 @@ function UserStationList(props) {
     })
   }
 
-  //const renderStationItem = (data,idx) =>
 
-  //const renderBookmarkStationItem = (data,idx) =>
+  const pStyle={marginTop:"2px", marginBottom:"2px"}
 
   const renderMyStationItemList = (stationlist) =>{
     return (stationlist.map((data,idx)=>{//TODO add idx id div
@@ -217,26 +238,59 @@ function UserStationList(props) {
           <h3><EdiText value={data['stationName']} onSave={(value)=>handleSaveStationName(value, data)}/></h3>
           </div>
         
-      <p>{data['stationId']}</p>
-      {data['visible']?<p id="visibility">Publiczna</p> :
-      <p id="visibility">Prywatna</p> }
-  
-      <button>Pokaż na mapie</button>
-      {
-        data['active']? <button value={'{"stationId":"'+data['stationId']+'", "mode": "disable"}'} onClick={handleStationModeButton}>Wyłącz pomiary</button>
-        : <button value={'{"stationId":"'+data['stationId']+'", "mode": "enable"}'} onClick={handleStationModeButton}>Włącz pomiary</button>
-      }
+      
+      <p style={{fontSize:"12px", marginTop:"-10px"}}>id: {data['stationId']}</p>
+      
+      <Flex style={{flexDirection: "column"}}>
+      <Flex style={{flexDirection: "row"}}>
+        <p style={pStyle}><b style={{marginRight: "33px"}}>Widoczność:</b>
+        {data['visible']!=null ? <>
+      <select name="visibility" id="visibility" onChange={(event)=>handleChangeVisibility(event.target.value, data['stationId'])} value={data['visible']} >
+          <option value="true">Publiczna</option>
+          <option value="false">Prywatna</option>
+      </select>
+      </> :<></>}</p>
+      </Flex>
+      <Flex style={{flexDirection: "row"}}>
+      <p style={pStyle}><b style={{marginRight: "10px"}}>Interwał pomiaru:</b>
+      {data['measureInterval']!=null && data['measureInterval']!="" ? <>
       <select name="measureInterval" id="measureInterval" onChange={(event)=>handleChangeMeasureInterval(event.target.value, data['stationId'])} value={data['measureInterval']} >
           <option value="3min">3min</option>
           <option value="5min">5min</option>
           <option value="10min">10min</option>
           <option value="15min">15min</option>
         </select>
-      <select name="visibility" id="visibility" onChange={(event)=>handleChangeVisibility(event.target.value, data['stationId'])} value={data['visible']} >
-          <option value="true">Publiczna</option>
-          <option value="false">Prywatna</option>
-      </select>
-  
+      </> : <></>}</p>
+      </Flex>
+      
+      <Flex style={{flexDirection: "row"}}>
+      {data['active']!=null ? 
+      <>
+      {
+        data['active'] ? <><p style={pStyle}><b>Status: </b>Pomiary włączone</p></> : <><p><b>Status: </b>Pomiary wyłączone</p></>
+      }
+      </>:<></>}
+      </Flex>
+      </Flex>
+      
+      <p/>
+
+      {data['lat']!=null && data['lng']!=null ? <>
+      <button onClick={()=>handleClickShowOnMap(data['stationId'])}>Pokaż na mapie</button>
+      </> : <></>
+      }
+      
+
+      {data['active']!=null && data['active']!="" ? <>
+        {
+          data['active']? <button value={'{"stationId":"'+data['stationId']+'", "mode": "disable"}'} onClick={handleStationModeButton}>Wyłącz pomiary</button>
+          : <button value={'{"stationId":"'+data['stationId']+'", "mode": "enable"}'} onClick={handleStationModeButton}>Włącz pomiary</button>
+        }
+      </> : <></>}
+      
+      
+
+      <button style={{backgroundColor: "red", color: "white", borderRadius: "6px"}} onClick={()=>handleRemoveStationButton(data['stationId'])}>Usuń stację</button>
       </div>)
     }))
   }
@@ -248,48 +302,54 @@ function UserStationList(props) {
         backgroundColor: '#DDDDDD'
       }}>
       <h3>{data['stationName']}</h3>
-      <p>{data['stationId']}</p>
-      {data['visible']?<p id="visibility">Publiczna</p> :
-      <p id="visibility">Prywatna</p> }
-  
-      <button>Pokaż na mapie</button>
+      <p style={{fontSize:"12px", marginTop:"-10px"}}>id: {data['stationId']}</p>
+      {data['visible']?<p id="visibility"><b>Widoczność: </b>Publiczna</p> :
+      <p id="visibility"><b>Widoczność: </b>Prywatna</p> }
+      {data['active']!=null ? 
+      <>
       {
-        data['active'] ? <><p>Enabled</p></> : <><p>Disabled</p></>
+        data['active'] ? <><p><b>Status: </b>Pomiary włączone</p></> : <><p><b>Status: </b>Pomiary wyłączone</p></>
       }
+      </>:<></>}
+      
+      <button onClick={()=>handleClickShowOnMap(data['stationId'])}>Pokaż na mapie</button>
+      
       </div>)
     }))
   }
 
   return (
     <>   
-<div className="d-flex p-2 col-example">
+<div>
   <NavList/>
 </div>
 
-      <div className="d-flex p-2 col-example">
+      <div>
+        <h1>Lista stacji</h1>
+        <hr style={{marginTop:"-20px", marginBottom:"0px"}}/>
       {!stateIsLoggedIn ?
-        <div className="Login">
+        <div id="Login">
           <h3>Musisz się zalogować</h3>
           <div>
-            <button onClick={handleClickLogin}>Go to login</button>
+            <button onClick={handleClickLogin}>Zaloguj się</button>
           </div>
         </div>
-        : <div className="StationList">
-          <div className="my-stations">
+        : <div id="StationList">
+          <div id="my-stations">
             <h2>Moje stacje</h2>
             {stateMyStationList.length>0 ? 
             <>{renderMyStationItemList(stateMyStationList)}</>
             :
-            <><p>(Empty list)</p>
+            <><p>(Pusta lista)</p>
             </>
             }
             </div>
-            <div className="watched-stations">
+            <div id="watched-stations">
             <h2>Zakładki</h2>
             {stateBookmarkStationList.length>0 ? 
             <>{renderBookmarkStationItemList(stateBookmarkStationList)}</>
             :
-            <><p>(Empty list)</p>
+            <><p>(Pusta lista)</p>
             </>
             }
             </div>

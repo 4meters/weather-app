@@ -6,9 +6,10 @@ import DateTimePicker from 'react-datetime-picker';
 import {format, differenceInHours, startOfMonth,
   startOfWeek, startOfDay, endOfDay, sub, isThisSecond} from 'date-fns';
 
-import {DefaultTooltipContent} from 'recharts/lib/component/DefaultTooltipContent';
 
 
+const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
+//const BASE_SERVER_URL = "http://127.0.0.1:8080"
 
 export default class Chart extends PureComponent {
   constructor(props){
@@ -27,15 +28,10 @@ export default class Chart extends PureComponent {
       chartYAxisUnit: "°C",
       chartWidth: 700,
       screenWidth: window.innerWidth
-      //isLoading: "true"
     };
   }
   
-  
 
-  static URL="192.168.1.202"
-
-  static demoUrl = 'https://codesandbox.io/s/simple-line-chart-kec3v';
 
   componentDidMount() {
     console.log("stationId: "+this.props.stationId)
@@ -48,20 +44,9 @@ export default class Chart extends PureComponent {
     console.log(window.innerWidth)
     this.getMeasureList();
     console.log(this.state.measuresList)
-    //console.log(data2)
-    //useEffect[dateStart]
-    //useEffect[dateEnd]
   }
+    
   
-  //TODO Remove
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.screenWidth !== this.state.screenWidth) {
-      console.log('pokemons state has changed.')
-    }
-  }
-  
-  
-  //callbacks on state change
   setChartWidth(){
     let width = window.innerWidth;
     if(width < 700){
@@ -76,7 +61,6 @@ export default class Chart extends PureComponent {
   checkDateDiff = (date, startOrEndDate) =>{
     if(startOrEndDate==="end"){
       let diffHours=differenceInHours(this.state.dateStart, date);
-      console.log(diffHours);
       if(diffHours<=-1){
         return true;
       }
@@ -86,7 +70,6 @@ export default class Chart extends PureComponent {
     }
     else if(startOrEndDate==="start"){
       let diffHours=differenceInHours(date, this.state.dateEnd);
-      //console.log(diffHours);if start<end -> -diff
       if(diffHours<=-1){
         return true;
       }
@@ -101,7 +84,6 @@ export default class Chart extends PureComponent {
       dateStart: start,
       dateEnd: end
     }, this.getMeasureList);
-    this.getMeasureList();
   }
 
   handleDateButton = (buttonId) =>{
@@ -139,10 +121,9 @@ export default class Chart extends PureComponent {
       this.setState({
         dateStart: date
       }, this.getMeasureList);
-      this.getMeasureList();
     }
     else{
-      alert("Minimum allowed date range is 1 hour. Please set another time")
+      alert("Minimalna różnica czasu to 1h. Proszę wybrać inną datę")
     }
   }
 
@@ -151,10 +132,9 @@ export default class Chart extends PureComponent {
       this.setState({
         dateEnd: date
       }, this.getMeasureList);
-      this.getMeasureList();
     }
     else{
-      alert("Minimum allowed date range is 1 hour. Please set another time")
+      alert("Minimalna różnica czasu to 1h. Proszę wybrać inną datę")
     }
     
   }
@@ -164,29 +144,21 @@ export default class Chart extends PureComponent {
     this.setState({
       chartType: event.target.value
     },this.getMeasureList);
-    //this.setState({isLoading: true})
-    this.getMeasureList();
   }
   
   onChangeChartValue = (event) =>{
-    //this.setState({
-    //  isLoading: true
-    //})
     let unitYAxisMapper={"temp": "°C",
                         "humidity": "%",
                         "pressure": "hPa",
-                        "pm2.5": "µg/m³",
-                        "pm2.5Corr": "µg/m³",
+                        "pm25": "µg/m³",
+                        "pm25Corr": "µg/m³",
                         "pm10": "µg/m³"}
-    //console.log(event.target.value)
     this.setState({
       chartYAxisUnit: unitYAxisMapper[event.target.value]
     })
     this.setState({
       chartValue: event.target.value,
     },this.getMeasureList);
-    //this.setState({isLoading: true})
-    this.getMeasureList();
   }
 
   getMeasureList = () => {
@@ -194,7 +166,7 @@ export default class Chart extends PureComponent {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          "token" : "DH1_D3JJ9WCWBLIFYBSWN5T68GSM7W_C",
+          "token" : localStorage.getItem("token"),
           "stationId": this.state.stationId,
           "dateFrom" : this.state.dateStart.toISOString(),
           "dateTo" : this.state.dateEnd.toISOString(),
@@ -204,7 +176,7 @@ export default class Chart extends PureComponent {
       })
       };
  
-      fetch(`http://192.168.1.202:8080/api/measure/measure-by-date-chart`, requestParams)
+      fetch(BASE_SERVER_URL+`/api/measure/measure-by-date-chart`, requestParams)
           .then(res => res.json())
           .then(measuresList => {
               measuresList=measuresList['chartDtoList'];
@@ -212,13 +184,17 @@ export default class Chart extends PureComponent {
                 ...this.state,
                 measuresList
             });
-            //this.setState({isLoading: false})
-            //console.log(measuresList);
           })
   }
 
 
   render() {
+    let legend ={"temp": "Temperatura",
+    "humidity": "Wilgotność",
+    "pressure": "Ciśnienie powietrza",
+    "pm25": "PM2.5",
+    "pm25Corr": "PM2.5 z korekcją",
+    "pm10": "PM10"}
     return (
       
       <>
@@ -275,7 +251,7 @@ export default class Chart extends PureComponent {
           <CartesianGrid strokeDasharray="3 3" />
           <Tooltip formatter={(value, name) => value + this.state.chartYAxisUnit}/>
           <Legend />
-          <Area type="monotone" dataKey={this.state.chartValue} stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
+          <Area name={legend[this.state.chartValue]} type="monotone" dataKey={this.state.chartValue} stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
         </AreaChart>
       </div>
       <div>
@@ -299,9 +275,9 @@ export default class Chart extends PureComponent {
            : 
            <><YAxis unit={this.state.chartYAxisUnit} fontSize="10" width={40}/>
            </>}
-          <Tooltip />
+           <Tooltip formatter={(value, name) => value + this.state.chartYAxisUnit}/>
           <Legend />
-          <Line type="monotone" dataKey={this.state.chartValue} stroke="#8884d8" activeDot={{ r: 4 }} />
+          <Line name={legend[this.state.chartValue]} type="monotone" dataKey={this.state.chartValue} stroke="#8884d8" activeDot={{ r: 4 }} />
         </LineChart>
       </div>
       </>

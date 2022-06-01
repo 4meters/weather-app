@@ -1,12 +1,8 @@
 import React, { useState, useEffect} from "react";
 import { useNavigate } from "react-router";
 
-import {MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import {Icon} from 'leaflet'
-import {Navigation} from 'react-minimal-side-navigation';
 import NavList from "./NavList";
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
-//import 'SideNavigation.js'
 
 //https://codereview.stackexchange.com/questions/235854/react-setstate-function-in-useeffect
 
@@ -16,6 +12,7 @@ function Login(props) {
   const [stateFirstRun,setStateFirstRun] = useState(true);
   const [stateLogin,setStateLogin] = useState("");
   const [statePassword,setStatePassword] = useState("");
+  const [stateIsOnRemovingAccount, setStateIsOnRemovingAccount] = useState(false);
 
   const [stateOldPassword,setStateOldPassword] = useState("");
   const [stateNewPassword,setStateNewPassword] = useState("");
@@ -23,6 +20,9 @@ function Login(props) {
 
   const [stateToken,setStateToken] = useState("");
   const [stateIsLoggedIn,setStateIsLoggedIn] = useState(false);
+
+  const BASE_SERVER_URL = "http://127.0.0.1:8080"
+  //const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
   
   const navigate = useNavigate();
 
@@ -33,7 +33,7 @@ function Login(props) {
 
   const validateLoginData = () => {
 
-    if(stateLogin>0 && statePassword>0){
+    if(stateLogin.length>0 && statePassword.length>0){
       return true;
     }
     else{
@@ -78,27 +78,42 @@ function Login(props) {
 
   const handleLoginUser = event => {
     event.preventDefault();
-    console.log(stateLogin)
-    console.log(statePassword)
-    const requestParams = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        "login" : stateLogin,
-        "password" : statePassword
-    })
-    };
-    //TODO add status check
+    if(validateLoginData()){
+      const requestParams = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          "login" : stateLogin,
+          "password" : statePassword
+      })
+      };
+      //TODO add status check
 
-    fetch(`http://127.0.0.1:8080/api/user/login`, requestParams)
-        .then(res => res.json())
-        .then(response => {
+      fetch(BASE_SERVER_URL+`/api/user/login`, requestParams)
+          .then(response => {
+            if(response.status===201){
+              return response.json()
+            }
+            else{
+              throw new Error(response.status)
+            }
+          }).then((response)=>{
             console.log(response['token']);
-            let token = response['token']
-            setStateToken(token);
-            setStateIsLoggedIn(true);
-            localStorage.setItem('token', token);
-        })
+              let token = response['token']
+              setStateToken(token);
+              setStateIsLoggedIn(true);
+              localStorage.setItem('login', stateLogin);
+              localStorage.setItem('token', token);
+          })
+          .catch((error)=>{
+            console.log('error: '+error)
+            //here if 400, 403
+            alert("Błędny login lub hasło")
+          })
+      }
+      else{
+        alert("Pole login i hasło nie mogą być puste")
+      }
   }
 
   const handleChangePasswordRequest = event =>{
@@ -112,50 +127,99 @@ function Login(props) {
         "token": stateToken
     })
     };
-    //TODO add status check
 
-    fetch(`http://127.0.0.1:8080/api/user/change-password`, requestParams)
+    fetch(BASE_SERVER_URL+`/api/user/change-password`, requestParams)
         .then(res => {
           console.log(res.status)
             if(res.status==201){
               setStateIsOnPasswordChange(false);
-              alert("Succesful password change")
+              alert("Hasło zostało zmienione")
             }
             else{
               setStateIsOnPasswordChange(false);              
-              alert("Failed to change password")
+              alert("Nie udało się zmienić hasła")
             }
             
         })
   }
 
+  const handleRemoveUserRequest = event =>{
+    event.preventDefault();
+    const requestParams = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        "password" : statePassword,
+        "token": stateToken
+    })
+    };
+
+    fetch(BASE_SERVER_URL+`/api/user/remove-user`, requestParams)
+        .then(res => {
+          console.log(res.status)
+            if(res.status==200){
+              setStateIsOnRemovingAccount(false);
+              setStateToken("");
+              setStateIsLoggedIn(false);
+              setStateLogin("");
+              setStatePassword("");
+              localStorage.setItem("login","")
+              localStorage.setItem("token","");
+              alert("Konto zostało usunięte")
+            }
+            else{
+              setStateIsOnRemovingAccount(false);              
+              alert("Nie udało się usunąć konta")
+            }
+            
+        })
+  }
 
   const handleClickLogout = () =>{
     setStateIsLoggedIn(false);
     setStateToken("");
+    localStorage.setItem("login","")
     localStorage.setItem('token',"");
   }
 
   const handleClickChangePassword = () =>{
     setStateIsOnPasswordChange(true);
+    setStateIsOnRemovingAccount(false);
   }
 
   const handleClickRegister = () =>{
     navigate("/register")
   }
 
+  const handleRemoveUserButtonFirstStage = () =>{
+    setStatePassword("");
+    setStateIsOnRemovingAccount(true);
+    setStateIsOnPasswordChange(false);
+  }
+
+  const handleRemoveUserSecondStage = (event) =>{
+    let result = window.confirm("Czy na pewno chcesz usunąć swoje konto?");
+    if(result){
+      handleRemoveUserRequest(event);
+    }
+    else{
+      setStateIsOnRemovingAccount(false);
+      alert("Anulowano usuwanie konta")
+    }
+  }
+
 
   return (
     <>   
-<div className="d-flex p-2 col-example">
+<div>
   <NavList/>
 </div>
 
-      <div className="d-flex p-2 col-example">
+      <div>
       {!stateIsLoggedIn ?
-        <div className="Login">
+        <div id="Login">
           <h1>Logowanie</h1>
-          
+          <hr style={{marginTop:"-20px", marginBottom:"0px"}}/>
           <form onSubmit={handleLoginUser}>
             <label>Login:<p/>
               <input type="text" value={stateLogin} onChange={handleChangeLogin} />
@@ -173,10 +237,13 @@ function Login(props) {
         </div>
         : <>
 
-        <div className="Profile">
+        <div id="Profile">
           <h1>Konto użytkownika</h1>
+          <hr style={{marginTop:"-20px", marginBottom:"0px"}}/>
+          
           {!stateIsOnPasswordChange ? 
           <>
+          <h3>{localStorage.getItem("login")}</h3>
           <button onClick={handleClickChangePassword}>Zmień hasło</button>
           </> 
           : <>
@@ -194,9 +261,23 @@ function Login(props) {
         
         </div>
 
-        <div className="Logout">
+        <div id="Logout">
           <button onClick={handleClickLogout}>Wyloguj się</button>
-          </div>
+        </div>
+        {!stateIsOnRemovingAccount ?
+        <div style={{paddingTop:"30px"}}>
+          <button style={{backgroundColor: "red", color: "white", borderRadius: "6px"}} onClick={()=>handleRemoveUserButtonFirstStage()}>Usuń konto</button>
+        </div>
+        : <div>
+          <h3>Podaj hasło do konta aby je usunąć:</h3>
+          <form onSubmit={handleRemoveUserSecondStage}>
+            <label>Hasło:<p/>
+              <input type="password" value={statePassword} onChange={handleChangePassword} />
+            </label>
+            <p/>
+            <input type="submit" style={{backgroundColor: "red", color: "white", borderRadius: "6px"}} value="Usuń konto" />
+          </form>
+          </div>}
         </>
       }
       
@@ -206,148 +287,3 @@ function Login(props) {
 }
 
 export default Login;
-
-/*<div className="Login">
-        <form onSubmit={this.handleLoginUser}>
-          <label>Login:<p/>
-            <input type="text" value={this.state.login} onChange={this.handleChangeLogin} />
-          </label>
-          <p/>
-          <label>Password:<p/>
-            <input type="text" value={this.state.password} onChange={this.handleChangePassword} />
-          </label><p/>
-          <input type="submit" value="Login" />
-        </form>
-      </div> */
-/*
-
-import React, { useState } from "react";
-
-import Form from "react-bootstrap/Form";
-
-import Button from "react-bootstrap/Button";
-
-import "./Login.css";
-
-export default function Login() {
-
-  const [email, setEmail] = useState("");
-
-  const [password, setPassword] = useState("");
-
-  function validateForm() {
-
-    return email.length > 0 && password.length > 0;
-
-  }
-
-  function handleSubmit(event) {
-
-    event.preventDefault();
-
-  }
-
-  return (
-
-    <div className="Login">
-
-      <Form onSubmit={handleSubmit}>
-
-        <Form.Group size="lg" controlId="email">
-
-          <Form.Label>Email</Form.Label>
-
-          <Form.Control
-
-            autoFocus
-
-            type="email"
-
-            value={email}
-
-            onChange={(e) => setEmail(e.target.value)}
-
-          />
-
-        </Form.Group>
-
-        <Form.Group size="lg" controlId="password">
-
-          <Form.Label>Password</Form.Label>
-
-          <Form.Control
-
-            type="password"
-
-            value={password}
-
-            onChange={(e) => setPassword(e.target.value)}
-
-          />
-
-        </Form.Group>
-
-        <Button block size="lg" type="submit" disabled={!validateForm()}>
-
-          Login
-
-        </Button>
-
-      </Form>
-
-    </div>
-
-  );
-
-}
-/*for(let el of stationList){
-                let markerPosition=[el['geolocationCoordinateN'], el['geolocationCoordinateE']];
-                markers.push(markerPosition);
-              }*/
-
-/*this.state [markers, setMarkers] = useState([
-    {
-      position: { lng: -122.673447, lat: 45.5225581 },
-      text: "Voodoo Doughnut"
-    }
-  ]);*/
-
-/*handleClick = () => {
-    setMarkers([
-      {
-        position: { lng: -110.673447, lat: 40.5225581 },
-        text: "Voodoo Doughnut"
-      },
-      {
-        position: { lng: -110.6781446, lat: 40.5225512 },
-        text: "Bailey's Taproom"
-      },
-      {
-        position: { lng: -110.67535700000002, lat: 40.5192743 },
-        text: "Barista"
-      }
-    ]);
-  };*/
-
-  /*    
-          /*for(let el of stationList){
-                let markerPosition=[el['geolocationCoordinateN'], el['geolocationCoordinateE']];
-                markers.push(markerPosition);
-              }*/
-          /*    let size = stationList['stationList'].length;
-              for(var i = 0; i < size ; i++){
-                let item = stationList['stationList'][i];
-                var markerPosition=[item['geolocationCoordinateN'], item['geolocationCoordinateE'], item['stationId']];
-                markers.push(markerPosition);
-              }
-              console.log(stationList);
-              console.log(markers);
-              this.setState({
-                  ...this.state,
-                  stationList
-              });
-              this.setState({
-                ...this.state,
-                markers
-            });
-          })*/

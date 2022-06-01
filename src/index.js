@@ -22,10 +22,7 @@ import ReactDOM from "react-dom";
 
 import "leaflet/dist/leaflet.css";
 import "./index.css";
-import Map from "./components/Map";
-import Chart from "./components/Chart"
-import Login from "./components/Login"
-import Register from "./components/Register"
+
 import _Routes from "./_Routes"
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 

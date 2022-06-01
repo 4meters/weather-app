@@ -1,23 +1,18 @@
 import React, { useState, useEffect } from "react";
 import {MapContainer, TileLayer, Marker, Popup, ZoomControl } from "react-leaflet";
-import {DomEvent, Icon} from 'leaflet'
-import {Navigation} from 'react-minimal-side-navigation';
+
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 //import 'SideNavigation.js'
 import L from 'leaflet';
-import Chart from './Chart';
-
-import {Link} from "react-router-dom";
-import {NavLink} from "react-router-dom";
 
 import NavList from "./NavList";
 
+import { useRef } from "react";
 //import { useLocation } from 'react-router-dom';
-import {useLocation,useNavigate,useParams} from "react-router-dom";
+import {useNavigate,useSearchParams} from "react-router-dom";
 
-import { Navigate } from "react-router-dom";
 
-import {format, max} from 'date-fns';
+import {format} from 'date-fns';
 
 import { WiThermometer, WiBarometer, WiHumidity, WiTime9, } from "react-icons/wi";
 import {BsBookmarkDashFill, BsBookmarkPlus} from "react-icons/bs";
@@ -36,6 +31,10 @@ L.Icon.Default.mergeOptions({
 
 const mapStyle = { height: "90vh" };
 
+const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
+//const BASE_SERVER_URL = "http://127.0.0.1:8080"
+
+
 let position = [50.068, 21.255]
 
 let activeStyle = {
@@ -45,10 +44,14 @@ let activeStyle = {
 let activeClassName = "underline"
 
 function Map(props){
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
 
+  const [stateShowMarker,setStateShowMarker] = useState("")
   const [stateStationList,setStateStationList] = useState();
   const [stateMarkers,setStateMarkers] = useState([]);
   const [statePrivateMarkers,setStatePrivateMarkers] = useState([]);
+  const [stateBookmarkMarkers,setStateBookmarkMarkers] = useState([]);
 
   const [stateStationLastMeasure,setStateStationLastMeasure] = useState([]);
   const [stateToken,setStateToken] = useState("");
@@ -59,6 +62,8 @@ function Map(props){
   const [stateMyStationList,setStateMyStationList] = useState([]);
   const [stateBookmarkStationList,setStateBookmarkStationList] = useState([]);
 
+
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
   let REFRESH_TIME = 1000 * 60 * 5; //=5min
@@ -68,6 +73,10 @@ function Map(props){
 
   useEffect(()=>{
     let token=localStorage.getItem('token');
+    console.log(searchParams.get('stationId'));
+    setStateShowMarker(searchParams.get('stationId'));
+    showMarker();
+
     if(typeof(token)==="string"){
       if(token.length>0){
         setStateToken(localStorage.getItem('token'));
@@ -81,7 +90,6 @@ function Map(props){
       setStateIsLoggedIn(false);
       }
     console.log("Logged in:"+stateIsLoggedIn)
-    //weatherData();
     refreshMarkers();
     const updateTimer = setInterval(() => refreshMarkers(), REFRESH_TIME);
     
@@ -90,8 +98,8 @@ function Map(props){
 
   useEffect(()=>{
     if(stateIsLoggedIn){
-      console.log("DDD")
       refreshPrivateMarkers();
+      refreshBookmarkMarkers();
       getUserStationList();
     }
     else{
@@ -99,18 +107,7 @@ function Map(props){
     }
   },[stateIsLoggedIn])
 
-  useEffect(()=>{
-    console.log("Bookmark")
-    console.log(stateBookmarkStationList);
-  },[stateBookmarkStationList])
 
-  useEffect(()=>{
-    console.log("UE4")
-    console.log(stateMarkers)
-    console.log("UE5")
-    console.log(statePrivateMarkers)
-    deDuplicateStations();
-  })
 
   useEffect(()=>{
     console.log("My station list: "+statePrivateMarkers);
@@ -123,35 +120,60 @@ function Map(props){
   },[stateIsLoading])
 
 
+  const showMarker = async() => {
+    await sleep(2000) //wait for setting react state...
+    const map = mapRef.current;
+    if (!map) {
+      return;
+    }
+
+    //map.flyTo([50.0,20.0], 13);
+
+    const marker = markerRef.current;
+    if (marker) {
+      let latlng=marker['_latlng']
+      console.log(latlng)
+
+      map.flyTo(latlng);
+      console.log(marker)
+
+      await sleep(700)
+      marker.openPopup();
+    }
+  };
 
   const deDuplicateStations = () => {
     console.log("Deduplicate start")
     let sizeMarkers = stateMarkers.length;
     let sizePrivateMarkers= statePrivateMarkers.length;
+    let sizeBookmarkMarkers= stateBookmarkMarkers.length;
+
+    let markersList = stateMarkers;
+
     for(let i=0; i<sizePrivateMarkers; i++){
       for(let j=0; j<sizeMarkers; j++){
-        console.log("Entered second loop")
-        //console.log("MOSTIMP: "+stateMarkers[i])
-        //console.log("MOSTIMP2: "+statePrivateMarkers[j])
         if(stateMarkers[j]!=undefined && statePrivateMarkers[j]!=undefined){
         if(stateMarkers[j][2]===statePrivateMarkers[i][2]){
-          console.log("StateMarkers: "+stateMarkers[j])
-          console.log("StatePrivateMarkers: "+statePrivateMarkers[i])
-          console.log("SUCCESS")
-          //let copy=stateMarkers;
-          //const index = copy.indexOf(marker);
-          //console.log(index)
-          //if (index > -1) {
-            console.log("SUPERSCCUSE")
-            let markersList = stateMarkers;
-            markersList.splice(j, 1);
-            console.log("MarkerList00"+markersList);
-            setStateMarkers(markersList)
-            setStateIsLoading(false);
-          
+          let markersList = stateMarkers;
+          markersList.splice(j, 1);
+          setStateMarkers(markersList);
         }}
       }
     }
+
+    for(let i=0; i<sizeBookmarkMarkers; i++){
+      for(let j=0; j<sizeMarkers; j++){
+        if(stateMarkers[j]!=undefined && stateBookmarkMarkers[j]!=undefined){
+        if(stateMarkers[j][2]===stateBookmarkMarkers[i][2]){
+          let markersList = stateMarkers;
+          markersList.splice(j, 1);
+          
+          setStateMarkers(markersList)
+        }}
+      }
+    }
+
+    console.log("MarkerList after deduplicate: "+markersList);
   }
 
   const getAirQualityIndexOverall = (pm25,pm10) =>{//pm2.5 pm10
@@ -193,12 +215,12 @@ function Map(props){
   }
 
   const refreshMarkers = () => {
-      fetch(`http://127.0.0.1:8080/api/station/get-public-stationlist`)
+      fetch(BASE_SERVER_URL+`/api/station/get-public-stationlist`)
           .then(res => res.json())
           .then(stationList => {
-            let stateStationList=stationList;//fix for access in second fetch
+            let stateStationList=stationList;
             setStateStationList(stationList);
-            fetch(`http://127.0.0.1:8080/api/measure/last-measure-all`)
+            fetch(BASE_SERVER_URL+`/api/measure/last-measure-all`)
             .then(res => res.json())
             .then(response => {
   
@@ -231,11 +253,9 @@ function Map(props){
   
   
   const refreshPrivateMarkers = () =>{
-    fetch(`http://127.0.0.1:8080/api/user/get-user-mystationlist-details/`+stateToken)
+    fetch(BASE_SERVER_URL+`/api/user/get-user-mystationlist-details/`+stateToken)
     .then(res => res.json())
     .then(response => {
-      console.log(response)
-      console.log(response['value'])
       let stationList=response['stationList']
       let measureList=response['measureList']
 
@@ -248,55 +268,38 @@ function Map(props){
         privateMarkers.push(markerPosition);
       }
       setStatePrivateMarkers(privateMarkers);
-      //deDuplicateStations();
     })
 
-    /*.then([httpcode, response] => {
-      if(res['status']==200){
-        let response = res.json();
-        console.log(response)
-        console.log(response['value'])
-        let stationList=response['stationList']
-        let measureList=response['measureList']
+  }
 
-        let privateMarkers = [];
+  const refreshBookmarkMarkers = () =>{
+    fetch(BASE_SERVER_URL+`/api/user/get-user-bookmarkstationlist-details/`+stateToken)
+    .then(res => res.json())
+    .then(response => {
+      let stationList=response['stationList']
+      let measureList=response['measureList']
 
-        let size = stationList.length;
-        for(var i = 0; i < size ; i++){
-          let item = stationList['stationList'][i];
-          var markerPosition=[item['lat'], item['lng'], item['stationId'], measureList[item['stationId']], item['stationName']];
-          privateMarkers.push(markerPosition);
-        }
-        setStatePrivateMarkers(privateMarkers); 
+      let bookmarkMarkers = [];
+
+      let size = stationList.length;
+      for(var i = 0; i < size ; i++){
+        let item = stationList[i];
+        var markerPosition=[item['lat'], item['lng'], item['stationId'], measureList[item['stationId']], item['stationName']];
+        bookmarkMarkers.push(markerPosition);
       }
-    })*/
-      
+      setStateBookmarkMarkers(bookmarkMarkers);
+    })
   }
 
 
   const getUserStationList = event => {
-    //TODO add status check
-    //TODO empty list catch
-    fetch(`http://127.0.0.1:8080/api/user/get-user-stationlist/`+stateToken)
+    fetch(BASE_SERVER_URL+`/api/user/get-user-stationlist/`+stateToken)
         .then(res => res.json())
         .then(response => {
             setStateMyStationList(response['myStationList'])
             setStateBookmarkStationList(response['bookmarkStationList'])
-            //console.log(response)
         })
   }
-
-  const weatherData = function(){
-    fetch(`http://127.0.0.1:8080/api/measure/last-measure-all`)
-          .then(res => res.json())
-          .then(response => {
-            console.log(response)
-              let measureList=response['measureList'];
-              setStateStationLastMeasure(response['measureList']);
-              console.log(stateStationLastMeasure);
-            });
-            
-          }
           
   const bookmarkRequest=(stationId, operation)=>{
     const requestParams = {
@@ -307,11 +310,12 @@ function Map(props){
         "stationId" : stationId
     })
     };
-    fetch(`http://127.0.0.1:8080/api/user/`+operation+`-bookmark`,requestParams)
+    fetch(BASE_SERVER_URL+`/api/user/`+operation+`-bookmark`,requestParams)
     .then(response => {
       if(response.status===200){
         refreshMarkers();
         refreshPrivateMarkers();
+        refreshBookmarkMarkers();
         getUserStationList();
       }
     })
@@ -319,14 +323,6 @@ function Map(props){
   }
 
 
-  const renderItem = ({position}) => {
-    return (
-      <Marker position={position}><Popup>
-      <p>Test</p>
-      </Popup>
-      </Marker>
-    )
-}
   const airQualityInfo=(level)=>{
     switch(level){
       case 0:{
@@ -361,32 +357,10 @@ function Map(props){
       }
     }
   }
-  //TODO merge measures into markers //TODO conditional rendering --no measures
-/*const markersList = stateMarkers.map((data) => {
-  return (
-    <Marker position={[data[0], data[1]]}>
-           <Popup>
-             <p>Station id: {data[2]} </p>
-             {typeof(data[3])!="undefined" ? <> 
-             <p><b>Temp: </b>{data[3]['temp']}</p>
-             <p><b>Humidity: </b>{data[3]['humidity']}</p>
-             <p><b>Pressure: </b>{data[3]['pressure']}</p>
-             <p><b>pm25: </b>{data[3]['pm25']}</p>
-             <p><b>pm25corr: </b>{data[3]['pm25Corr']}</p>
-             <p><b>pm10: </b>{data[3]['pm10']}</p>
-             <p><b>Measure time: </b>{data[3]['date']}</p>
-             <div id="stats">
-               <Chart></Chart>
-             </div>
-             </> : <></>
-             }
-           </Popup>
-         </Marker>
-  )*/
+
 
   const handleArchivalDataButtonClick = (event) =>{
     navigate("/archival-data?stationId="+event.target.value)
-    //add station id to path
   }
 
   const checkBookmark = (stationId) =>{
@@ -417,45 +391,71 @@ function Map(props){
     shadowSize: [41, 41]
   });
 
-  const markersList = (markers) =>{
+  const goldMarker = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
 
+  const pStyle1={marginTop:"5px",marginLeft:"-5px"};
+  const flexStyle1={marginTop: "-10px", marginBottom: "-20px"}
+
+  const renderMarkersList = (markers) =>{
+    deDuplicateStations();
     return (markers.map((data, idx) => {
-      
+      //show marker
+      let ref1;
+
+      if(stateShowMarker!="" && stateShowMarker===data[2]){
+        ref1=markerRef;
+        console.log("Found marker!")
+      }
+      else{
+        ref1=null;
+      }
       return (
-        <Marker key={`marker-${idx}`} position={[data[0], data[1]]}>
+        <Marker ref={ref1} key={`marker-${idx}`} position={[data[0], data[1]]}>
                <Popup>
-                 <h3>{data[4]}{stateIsLoggedIn ? 
+                 <Flex justifySpaceBetween style={{marginTop:"-14px", paddingRight:"10px"}}>
+                 <h3 style={{marginBottom:"10px"}}>{data[4]}</h3>
+                 {stateIsLoggedIn ? 
                  <>
                  {checkBookmark(data[2])?
-                  <><button value={data[2]} onClick={() => handleBookmarkButtonClick(data[2],"remove")}><BsBookmarkDashFill/></button>
-                  </> 
-                  : <><button value={data[2]} onClick={() => handleBookmarkButtonClick(data[2],"add")}><BsBookmarkPlus/></button>
-                  </>}
+                  <div><button value={data[2]} onClick={() => handleBookmarkButtonClick(data[2],"remove")}><BsBookmarkDashFill/></button>
+                  </div> 
+                  : <div><button value={data[2]} onClick={() => handleBookmarkButtonClick(data[2],"add")}><BsBookmarkPlus/></button>
+                  </div>}
                   
-                 </> : <></>}</h3>
+                 </> : <></>}
+                 </Flex>
 
                  <p style={{fontSize: "10px", marginTop: "-10px"}}>id: {data[2]} </p>
                  
                  
                  {typeof(data[3])!="undefined" ? <> 
-                 <Flex style={{marginTop: "-10px", marginBottom: "-10px"}}>
-                 <div><WiThermometer size={24}/>{data[3]['temp']}°C</div>
-                 <div><WiHumidity size={24}/>{data[3]['humidity']}%</div>
-                 <div><WiBarometer size={24}/>{data[3]['pressure']}hPa</div>
+                 <Flex style={flexStyle1}>
+                 <WiThermometer size={24}/><p style={pStyle1}>{data[3]['temp']}°C</p>
+                 <WiHumidity size={24}/><p style={pStyle1}>{data[3]['humidity']}%</p>
+                 <WiBarometer size={24}/><p style={pStyle1}>{data[3]['pressure']}hPa</p>
                  </Flex>
-                 <p><b>PM2.5: </b>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p>
-                 <p style={{fontSize: "8px", marginTop: "-10px", marginBottom:"-10px"}}>Indeks</p>
+                 <Flex style={flexStyle1} justifySpaceBetween><p><b>PM2.5: </b></p><p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p></Flex>
+                 <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
                  {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}
                  
-                 <p><b>PM2.5 z korekcją: </b>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p>
-                 <p style={{fontSize: "8px", marginTop: "-10px", marginBottom:"-10px"}}>Indeks</p>
+                 <Flex style={flexStyle1} justifySpaceBetween><p style={{marginRight:"3px"}}><b>PM2.5 z korekcją: </b></p><p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p></Flex>
+                 <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
                  {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}
                  
-                 <p><b>PM10: </b>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p>
-                 <p style={{fontSize: "8px", marginTop: "-10px", marginBottom:"-10px"}}>Indeks</p>
+                 <Flex style={flexStyle1} justifySpaceBetween><p><b>PM10: </b></p><p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p></Flex>
+                 <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
                  {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}
                  
-                 <p><WiTime9 size={24}/>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>
+                 <Flex>
+                  <WiTime9 size={24}/><p style={{marginTop:"5px"}}>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>
+                 </Flex>
                  <div id="stats">
                    <button value={data[2]} onClick={handleArchivalDataButtonClick}>Dane archiwalne</button>
                  </div>
@@ -468,37 +468,115 @@ function Map(props){
     }))
   }
 
-  const privateMarkersList = (markers) =>{
-
+  const renderPrivateMarkersList = (markers) =>{
+    deDuplicateStations();
     return (markers.map((data, idx) => {
-      
+      //show marker
+      let ref1;
+
+      if(stateShowMarker!="" && stateShowMarker===data[2]){
+        ref1=markerRef;
+        console.log("Found marker!")
+      }
+      else{
+        ref1=null;
+      }
+      //
       return (
-        <Marker key={`marker-${idx}`} position={[data[0], data[1]]}  icon={greenMarker}>
+        <Marker ref={ref1} key={`marker-${idx}`} position={[data[0], data[1]]}  icon={greenMarker}>
                <Popup>
-               <h3>{data[4]}</h3>
+                <h3>{data[4]}</h3>
+
+                <p style={{fontSize: "10px", marginTop: "-10px"}}>id: {data[2]} </p>
+                 
+                 
+                {typeof(data[3])!="undefined" ? <> 
+                <Flex style={flexStyle1}>
+                <WiThermometer size={24}/><p style={pStyle1}>{data[3]['temp']}°C</p>
+                <WiHumidity size={24}/><p style={pStyle1}>{data[3]['humidity']}%</p>
+                <WiBarometer size={24}/><p style={pStyle1}>{data[3]['pressure']}hPa</p>
+                </Flex>
+                <Flex style={flexStyle1} justifySpaceBetween><p><b>PM2.5: </b></p><p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p></Flex>
+                <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
+                {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}
+                
+                <Flex style={flexStyle1} justifySpaceBetween><p style={{marginRight:"3px"}}><b>PM2.5 z korekcją: </b></p><p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p></Flex>
+                <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
+                {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}
+                
+                <Flex style={flexStyle1} justifySpaceBetween><p><b>PM10: </b></p><p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p></Flex>
+                <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
+                {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}
+                
+                <Flex>
+                <WiTime9 size={24}/><p style={{marginTop:"5px"}}>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>
+                </Flex>
+                <div id="stats">
+                  <button value={data[2]} onClick={handleArchivalDataButtonClick}>Dane archiwalne</button>
+                </div>
+                </> : <></>
+                }
+               </Popup>
+             </Marker>
+      )
+    }))
+  }
+
+  
+  const renderBookmarkMarkersList = (markers) =>{
+    deDuplicateStations();
+    return (markers.map((data, idx) => {
+      //show marker
+      let ref1;
+
+      if(stateShowMarker!="" && stateShowMarker===data[2]){
+        ref1=markerRef;
+        console.log("Found marker!")
+      }
+      else{
+        ref1=null;
+      }
+      //
+      return (
+        <Marker ref={ref1} key={`marker-${idx}`} position={[data[0], data[1]]} icon={goldMarker}>
+               <Popup>
+                 <Flex justifySpaceBetween style={{marginTop:"-14px", paddingRight:"10px"}}>
+                 <h3 style={{marginBottom:"10px"}}>{data[4]}</h3>
+                 {stateIsLoggedIn ? 
+                 <>
+                 {checkBookmark(data[2])?
+                  <div><button value={data[2]} onClick={() => handleBookmarkButtonClick(data[2],"remove")}><BsBookmarkDashFill/></button>
+                  </div> 
+                  : <div><button value={data[2]} onClick={() => handleBookmarkButtonClick(data[2],"add")}><BsBookmarkPlus/></button>
+                  </div>}
+                  
+                 </> : <></>}
+                 </Flex>
 
                  <p style={{fontSize: "10px", marginTop: "-10px"}}>id: {data[2]} </p>
                  
                  
                  {typeof(data[3])!="undefined" ? <> 
-                 <Flex style={{marginTop: "-10px", marginBottom: "-10px"}}>
-                 <div><WiThermometer size={24}/>{data[3]['temp']}°C</div>
-                 <div><WiHumidity size={24}/>{data[3]['humidity']}%</div>
-                 <div><WiBarometer size={24}/>{data[3]['pressure']}hPa</div>
+                 <Flex style={flexStyle1}>
+                 <WiThermometer size={24}/><p style={pStyle1}>{data[3]['temp']}°C</p>
+                 <WiHumidity size={24}/><p style={pStyle1}>{data[3]['humidity']}%</p>
+                 <WiBarometer size={24}/><p style={pStyle1}>{data[3]['pressure']}hPa</p>
                  </Flex>
-                 <p><b>PM2.5: </b>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p>
-                 <p style={{fontSize: "8px", marginTop: "-10px", marginBottom:"-10px"}}>Indeks</p>
+                 <Flex style={flexStyle1} justifySpaceBetween><p><b>PM2.5: </b></p><p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p></Flex>
+                 <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
                  {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}
                  
-                 <p><b>PM2.5 z korekcją: </b>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p>
-                 <p style={{fontSize: "8px", marginTop: "-10px", marginBottom:"-10px"}}>Indeks</p>
+                 <Flex style={flexStyle1} justifySpaceBetween><p style={{marginRight: "3px"}}><b>PM2.5 z korekcją: </b></p><p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p></Flex>
+                 <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
                  {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}
                  
-                 <p><b>PM10: </b>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p>
-                 <p style={{fontSize: "8px", marginTop: "-10px", marginBottom:"-10px"}}>Indeks</p>
+                 <Flex style={flexStyle1} justifySpaceBetween><p><b>PM10: </b></p><p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p></Flex>
+                 <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
                  {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}
                  
-                 <p><WiTime9 size={24}/>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>
+                 <Flex>
+                  <WiTime9 size={24}/><p style={{marginTop:"5px"}}>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>
+                 </Flex>
                  <div id="stats">
                    <button value={data[2]} onClick={handleArchivalDataButtonClick}>Dane archiwalne</button>
                  </div>
@@ -506,49 +584,41 @@ function Map(props){
                  }
                </Popup>
              </Marker>
+             
       )
     }))
   }
-/*
-  <p><b>Temp: </b>{stateStationLastMeasure[data[2]]['temp']}</p>
-             <p><b>Humidity: </b>{stateStationLastMeasure[data[2]]['humidity']}</p>
-             <p><b>Pressure: </b>{stateStationLastMeasure[data[2]]['pressure']}</p>
-             <p><b>pm25: </b>{stateStationLastMeasure[data[2]]['pm25']}</p>
-             <p><b>pm25corr: </b>{stateStationLastMeasure[data[2]]['pm25Corr']}</p>
-             <p><b>pm10: </b>{stateStationLastMeasure[data[2]]['pm10']}</p>
-             <p><b>Measure time: </b>{stateStationLastMeasure[data[2]]['date']}</p>
-*/
-//<button onClick={showStatistics}>Statistics</button>
 
-
-  
-//TODO conditional navigation render
   return (
     <>
     <div style={{display: "flex", flexDirection: "column"}}>
-    <div style={{display: "flex", flex:1}}>
-    <NavList/>
-    <div>
-      
-    </div>
-    </div>
-      <div className="d-flex p-2 col-example">
-        <MapContainer key={stateIsLoading} center={position} zoom={10} style={mapStyle} maxZoom={18} zoomControl={false}>
-        <TileLayer
-          url="https://{s}.tile.osm.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
-        />
-        {stateIsLoading ? <></> :
-        <>{markersList(stateMarkers)}
-        {privateMarkersList(statePrivateMarkers)}</>}
-        
-        <ZoomControl position="bottomright"/>
-      </MapContainer>
+      <div style={{display: "flex", flex:1}}>
+        <NavList/>
+        <div>
+          <button onClick={()=>{navigate('/admin-panel')}}>Panel administracyjny</button>
+        </div>
       </div>
+        <div id="map">
+          <MapContainer whenCreated={(map) => {
+            mapRef.current = map;
+          }} key={stateIsLoading} center={position} zoom={10} style={mapStyle} maxZoom={18} zoomControl={false}>
+          <TileLayer
+            url="https://{s}.tile.osm.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+          />
+          
+          {stateIsLoading ? <></> :
+          <>{renderMarkersList(stateMarkers)}
+          {renderPrivateMarkersList(statePrivateMarkers)}
+          {renderBookmarkMarkersList(stateBookmarkMarkers)}
+          </>}
+          
+          <ZoomControl position="bottomright"/>
+        </MapContainer>
       </div>
+    </div>
     </>
-  )//RENDER ISSUES !!
-  // /{markersList(stateMarkers)} //above privatemarkers //markery się dublują jeśli są na dwóch listach, add check
+  )
 }
 
 export default Map;

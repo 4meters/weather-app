@@ -1,21 +1,14 @@
 import React, { useState, useEffect} from "react";
-import {MapContainer, TileLayer, Marker, Popup, ZoomControl, useMapEvents, useMap} from "react-leaflet";
-import {DomEvent, Icon} from 'leaflet'
-import {Navigation} from 'react-minimal-side-navigation';
+import {MapContainer, TileLayer, Marker, Popup, ZoomControl, useMapEvents} from "react-leaflet";
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 //import 'SideNavigation.js'
 import L from 'leaflet';
-import Chart from './Chart';
 
-import {Link} from "react-router-dom";
-import {NavLink} from "react-router-dom";
 
 import NavList from "./NavList";
 
 //import { useLocation } from 'react-router-dom';
-import {useLocation,useNavigate,useParams, useSearchParams} from "react-router-dom";
-
-import { Navigate } from "react-router-dom";
+import {useNavigate, useSearchParams} from "react-router-dom";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -30,42 +23,9 @@ const mapStyle = { height: "90vh" };
 
 let position = [50.068, 21.255]
 
-let activeStyle = {
-  textDecoration: "underline"
-};
-
-let activeClassName = "underline"
 
 function AddStationOnMap(props){
-  /*const map = useMapEvents({
-    click: () => {
-      map.locate()
-    },
-    locationfound: (location) => {
-      console.log('location found:', location)
-    },
-  })*/
-
-
- /* const map = useMapEvents({
-    click(event) {
-      const { lat, lng } = event.latlng;
-      setPosition({
-        latitude: lat,
-        longitude: lng,
-      });
-    },
-  });*/
-  //special one for new marker
-
   
-  /*const map = useMapEvents({
-    click(e) {                                
-        console.log("tt")
-    },            
-  })*/
-  //const location = useLocation();
-  //let {id} = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [stateNewStationVisibility, setStateNewStationVisibility] = useState(true);
@@ -84,15 +44,13 @@ function AddStationOnMap(props){
   const [stateAddedNewMarker, setStateAddedNewMarker] = useState(false);
   const [stateNewMarkerConfirmed, setStateNewMarkerConfirmed] = useState(false);
 
+  const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
+  //const BASE_SERVER_URL = "http://127.0.0.1:8080"
+
   const navigate = useNavigate();
-  //TODO pass (new) stationId from parent function --> done with ?stationId=
 
   //TODO add token, login check
   //TODO we are adding new station aka, location of station and name, stationId already in db, we need to update document!
-  //also we need to assign station to user! basing on token we determine which user!
-  //also ! we need to provide checkbox for setting private or public station it is!
-  //if private we provide private station name
-  //if public we provide public station name, which user can later change with private friendly name
 
   //change this basing on notebook 30-03-2022
   let REFRESH_TIME = 1000 * 60 * 5; //=5min
@@ -102,20 +60,6 @@ function AddStationOnMap(props){
 
   useEffect(()=>{
     refreshMarkers();
-    //console.log("tt"+location.stationId)
-    //console.log(id);
-   // console.log(`/something/${id}`);
-   //TODO maybe add check if there is stationId maybe not it seems to not be easy
-   /*let stationId=searchParams.get('stationId').toString;
-   console.log("TEST"+typeof(stationId));
-   if(typeof(searchParams.get('stationId'))!="string"){
-     console.log("No stationId provided")
-     console.log(typeof(searchParams.get('stationId')))
-   }
-    console.log(searchParams.get('stationId'));*/
-    //const updateTimer = setInterval(() => refreshMarkers(), REFRESH_TIME);
-    //weatherData();
-
     console.log("Logged in:"+stateIsLoggedIn)
     let token=localStorage.getItem('token');
     if(typeof(token)==="string"){
@@ -133,15 +77,10 @@ function AddStationOnMap(props){
   }, [])
 
   useEffect(()=>{
-    console.log("dddd")
+    console.log("1")
   },[stateMarkers])
 
   const saveMarker = (newMarkerCoords) => {
-    /*let markersList=stateMarkers;
-    markersList.push(newMarkerCoords);
-    setStateMarkers(markersList);
-    console.log(stateMarkers)
-  //this.setState((prevState) => ({ ...prevState, data }));*/
     console.log(newMarkerCoords)
     setStateNewMarker(newMarkerCoords);
     setStateAddedNewMarker(true);
@@ -168,14 +107,6 @@ function AddStationOnMap(props){
     console.log(stateNewMarkerConfirmed);
     setStateNewMarkerConfirmed(true);
   }
-  /*const map = useMapEvents({
-    click: () => {
-      map.locate()
-    },
-    locationfound: (location) => {
-      console.log('location found:', location)
-    },
-  })*/
 
   const handleAddStationFinalRequest = event => {
     event.preventDefault();
@@ -191,18 +122,15 @@ function AddStationOnMap(props){
         "visible" : stateNewStationVisibility
     })
     };
-    //TODO add status check
 
-    fetch(`http://127.0.0.1:8080/api/station/add-station-on-map`, requestParams)
+    fetch(BASE_SERVER_URL+`/api/station/add-station-on-map`, requestParams)
         .then(response => {
             if(response.status===200){
-              alert("Succesfully added")
+              alert("Stacja została dodana na mapę")
               navigate("/")
-              //TODO alert succesfully added, on alert close go to map
             }
             else{
-              alert("Error - station may be already added")
-              //TODO ERROR
+              alert("Nie udało się dodać stacji na mapę")
             }
         })
   }
@@ -212,10 +140,10 @@ function AddStationOnMap(props){
   }
 
   const refreshMarkers = () => {
-      fetch(`http://127.0.0.1:8080/api/station/get-public-stationlist`)
+      fetch(BASE_SERVER_URL+`/api/station/get-public-stationlist`)
           .then(res => res.json())
           .then(stationList => {
-            let stateStationList=stationList;//fix for access in second fetch
+            let stateStationList=stationList;
             setStateStationList(stationList);
             
             let markers = [];
@@ -241,7 +169,6 @@ function AddStationOnMap(props){
   }
 
           
-  //TODO merge measures into markers //TODO conditional rendering --no measures
 const markersList = (markers) =>{
 
 return (markers.map((data, idx) => {
@@ -257,16 +184,7 @@ return (markers.map((data, idx) => {
   )
   }))
 }
-/*
-  <p><b>Temp: </b>{stateStationLastMeasure[data[2]]['temp']}</p>
-             <p><b>Humidity: </b>{stateStationLastMeasure[data[2]]['humidity']}</p>
-             <p><b>Pressure: </b>{stateStationLastMeasure[data[2]]['pressure']}</p>
-             <p><b>pm25: </b>{stateStationLastMeasure[data[2]]['pm25']}</p>
-             <p><b>pm25corr: </b>{stateStationLastMeasure[data[2]]['pm25Corr']}</p>
-             <p><b>pm10: </b>{stateStationLastMeasure[data[2]]['pm10']}</p>
-             <p><b>Measure time: </b>{stateStationLastMeasure[data[2]]['date']}</p>
-*/
-//<button onClick={showStatistics}>Statistics</button>
+
 
 const onChangeRadioButtonsVisibility = event =>{
   console.log(event.target.value)

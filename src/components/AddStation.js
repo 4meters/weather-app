@@ -17,6 +17,8 @@ function AddStation(props) {
   const [stateStationId,setStateStationId] = useState("");
   const [stateStationKey,setStateStationKey] = useState("");
   const navigate = useNavigate();
+  //const BASE_SERVER_URL = "http://localhost:8000"
+  const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
 
   const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
@@ -38,7 +40,7 @@ function AddStation(props) {
     else{
       setStateIsLoggedIn(false);
       }
-  }, []) //only on first run, if not it breaks some things with no errors in console
+  }, [])
 
 
   const switchToLoginPage = () =>{  
@@ -66,7 +68,7 @@ function AddStation(props) {
     })
     };
 
-    fetch(`http://127.0.0.1:8080/api/station/verify-station`, requestParams)
+    fetch(BASE_SERVER_URL+`/api/station/verify-station`, requestParams)
         .then(response => {
             if(response.status==200){
               navigate("/add-station-on-map?stationId="+stateStationId)
@@ -75,23 +77,18 @@ function AddStation(props) {
   }
 
 
-  const handleClickLogout = () =>{
-    setStateIsLoggedIn(false);
-    setStateToken("");
-    localStorage.setItem('token',"");
-  }
-
 
   return (
     <>   
-<div className="d-flex p-2 col-example">
+<div id="navlist">
   <NavList/>
 </div>
 
-      <div className="d-flex p-2 col-example">
+      <div>
       {stateIsLoggedIn ?
         <div className="Add-station">
           <h1>Dodaj nową stację</h1>
+          <hr style={{marginTop:"-20px", marginBottom:"0px"}}/>
           <h3>Podaj id stacji i klucz stacji</h3>
           <form onSubmit={handleStationIdCheck}>
             <label>Id stacji:<p/>
@@ -106,7 +103,9 @@ function AddStation(props) {
           </form>
         </div>
         : <div className="LoginNeeded">
-          <h1>Wymagane zalogowanie</h1>
+          <h1>Dodaj nową stację</h1>
+          <hr style={{marginTop:"-20px", marginBottom:"0px"}}/>
+          <h3>Wymagane zalogowanie</h3>
           <button onClick={switchToLoginPage}>Zaloguj się</button>
           </div>
 

@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import {MapContainer, TileLayer, Marker, Popup, ZoomControl } from "react-leaflet";
 
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
-//import 'SideNavigation.js'
+
 import L from 'leaflet';
 
 import NavList from "./NavList";
 
 import { useRef } from "react";
-//import { useLocation } from 'react-router-dom';
+
 import {useNavigate,useSearchParams} from "react-router-dom";
 
 
@@ -18,6 +18,8 @@ import { WiThermometer, WiBarometer, WiHumidity, WiTime9, } from "react-icons/wi
 import {BsBookmarkDashFill, BsBookmarkPlus} from "react-icons/bs";
 
 import Flex from '@react-css/flex'
+
+import {BASE_SERVER_URL} from '../ServerURL'
 
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -31,17 +33,12 @@ L.Icon.Default.mergeOptions({
 
 const mapStyle = { height: "90vh" };
 
-const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
+//const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
 //const BASE_SERVER_URL = "http://127.0.0.1:8080"
 
 
 let position = [50.068, 21.255]
 
-let activeStyle = {
-  textDecoration: "underline"
-};
-
-let activeClassName = "underline"
 
 function Map(props){
   const mapRef = useRef(null);
@@ -67,6 +64,7 @@ function Map(props){
   const navigate = useNavigate();
 
   let REFRESH_TIME = 1000 * 60 * 5; //=5min
+
   const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
   }
@@ -81,6 +79,8 @@ function Map(props){
       if(token.length>0){
         setStateToken(localStorage.getItem('token'));
         setStateIsLoggedIn(true);
+        const updateTimer = setInterval(() => {refreshPrivateMarkers();
+           refreshBookmarkMarkers()}, REFRESH_TIME); //refresh every 5min
       }
       else{
         setStateIsLoggedIn(false);
@@ -91,7 +91,7 @@ function Map(props){
       }
     console.log("Logged in:"+stateIsLoggedIn)
     refreshMarkers();
-    const updateTimer = setInterval(() => refreshMarkers(), REFRESH_TIME);
+    const updateTimer = setInterval(() => refreshMarkers(), REFRESH_TIME); //refresh every 5min
     
 
   }, [])
@@ -115,9 +115,6 @@ function Map(props){
     //deDuplicateStations();
   },[statePrivateMarkers, stateMarkers, stateIsLoggedIn])
 
-  useEffect(()=>{
-
-  },[stateIsLoading])
 
 
   const showMarker = async() => {
@@ -173,7 +170,7 @@ function Map(props){
       }
     }
 
-    console.log("MarkerList after deduplicate: "+markersList);
+    console.log("Markerlist after deduplicate: "+markersList);
   }
 
   const getAirQualityIndexOverall = (pm25,pm10) =>{//pm2.5 pm10

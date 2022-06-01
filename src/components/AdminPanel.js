@@ -8,8 +8,8 @@ import Flex from '@react-css/flex'
 
 import EdiText from 'react-editext';
 
+import {BASE_SERVER_URL} from '../ServerURL'
 
-//https://codereview.stackexchange.com/questions/235854/react-setstate-function-in-useeffect
 
 function AdminPanel(props) {
 
@@ -25,7 +25,7 @@ function AdminPanel(props) {
   
 
   //const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
-  const BASE_SERVER_URL = "http://127.0.0.1:8080"
+  //const BASE_SERVER_URL = "http://127.0.0.1:8080"
 
 
   const navigate = useNavigate();

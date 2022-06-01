@@ -4,12 +4,11 @@ import { useNavigate } from "react-router";
 import NavList from "./NavList";
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 
-//https://codereview.stackexchange.com/questions/235854/react-setstate-function-in-useeffect
+import {BASE_SERVER_URL} from '../ServerURL'
 
 function Login(props) {
 
 
-  const [stateFirstRun,setStateFirstRun] = useState(true);
   const [stateLogin,setStateLogin] = useState("");
   const [statePassword,setStatePassword] = useState("");
   const [stateIsOnRemovingAccount, setStateIsOnRemovingAccount] = useState(false);
@@ -21,7 +20,7 @@ function Login(props) {
   const [stateToken,setStateToken] = useState("");
   const [stateIsLoggedIn,setStateIsLoggedIn] = useState(false);
 
-  const BASE_SERVER_URL = "http://127.0.0.1:8080"
+  //const BASE_SERVER_URL = "http://127.0.0.1:8080"
   //const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
   
   const navigate = useNavigate();
@@ -57,7 +56,7 @@ function Login(props) {
     else{
       setStateIsLoggedIn(false);
       }
-  }, []) //only on first run, if not it breaks some things with no errors in console
+  }, [])
 
 
   const handleChangeLogin = event => {
@@ -87,7 +86,6 @@ function Login(props) {
           "password" : statePassword
       })
       };
-      //TODO add status check
 
       fetch(BASE_SERVER_URL+`/api/user/login`, requestParams)
           .then(response => {
@@ -107,7 +105,6 @@ function Login(props) {
           })
           .catch((error)=>{
             console.log('error: '+error)
-            //here if 400, 403
             alert("Błędny login lub hasło")
           })
       }

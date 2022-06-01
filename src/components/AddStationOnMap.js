@@ -1,13 +1,12 @@
 import React, { useState, useEffect} from "react";
 import {MapContainer, TileLayer, Marker, Popup, ZoomControl, useMapEvents} from "react-leaflet";
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
-//import 'SideNavigation.js'
+
 import L from 'leaflet';
 
 
 import NavList from "./NavList";
 
-//import { useLocation } from 'react-router-dom';
 import {useNavigate, useSearchParams} from "react-router-dom";
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -23,6 +22,7 @@ const mapStyle = { height: "90vh" };
 
 let position = [50.068, 21.255]
 
+import {BASE_SERVER_URL} from '../ServerURL'
 
 function AddStationOnMap(props){
   
@@ -44,7 +44,7 @@ function AddStationOnMap(props){
   const [stateAddedNewMarker, setStateAddedNewMarker] = useState(false);
   const [stateNewMarkerConfirmed, setStateNewMarkerConfirmed] = useState(false);
 
-  const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
+  //const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
   //const BASE_SERVER_URL = "http://127.0.0.1:8080"
 
   const navigate = useNavigate();

@@ -1,57 +1,19 @@
-import React, { useState, useEffect} from "react";
+import React from "react";
 
-import {MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import {Icon} from 'leaflet'
-import {Navigation} from 'react-minimal-side-navigation';
 import NavList from "./NavList";
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
-import Chart from "./Chart"
 
-import {useSearchParams} from 'react-router-dom';
-//import 'SideNavigation.js'
-
-//https://codereview.stackexchange.com/questions/235854/react-setstate-function-in-useeffect
 
 function ConfigureStation(props) {
 
 
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [stateStationId,setStateStationId] = useState(searchParams.get("stationId"));
-  const [stateStationName,setStateStationName] = useState("");
-
-  const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
-
-  const sleep = (milliseconds) => {
-    return new Promise(resolve => setTimeout(resolve, milliseconds))
-  }
-
-  const getStationName=()=>{
-    fetch(BASE_SERVER_URL+`/api/station/get-station-name/`+stateStationId)
-          .then(res => res.json())//check if 404
-          .then(response => {
-              setStateStationName(response['stationName']);
-          })
-  }
-
-  useEffect(() =>{
-    if(stateStationId!=null){
-      getStationName();
-    }
-    
-  }, []) //only on first run, if not it breaks some things with no errors in console
-
-
-
-  
-
-
-  return (
+ return (
     <>   
-<div className="d-flex p-2 col-example">
+<div>
   <NavList/>
 </div>
 
-        <div className="chart">
+        <div>
           <h1>Konfiguracja stacji</h1>
           <hr style={{marginTop:"-20px", marginBottom:"0px"}}/>
           <p>Aby skonfigurować połączenie 

@@ -4,14 +4,11 @@ import { useNavigate } from "react-router";
 import NavList from "./NavList";
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 import Flex from '@react-css/flex'
-import {AiFillEdit} from "react-icons/ai";
 
 import EdiText from 'react-editext';
 
+import {BASE_SERVER_URL} from '../ServerURL'
  
-
-
-//https://codereview.stackexchange.com/questions/235854/react-setstate-function-in-useeffect
 
 function UserStationList(props) {
 
@@ -21,7 +18,7 @@ function UserStationList(props) {
   const [stateBookmarkStationList,setStateBookmarkStationList] = useState([]);
 
   //const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
-  const BASE_SERVER_URL = "http://127.0.0.1:8080"
+  //const BASE_SERVER_URL = "http://127.0.0.1:8080"
 
 
   const navigate = useNavigate();
@@ -131,7 +128,6 @@ function UserStationList(props) {
     fetch(BASE_SERVER_URL+`/api/user/remove-station`,requestParams)
     .then(response => {
       if(response.status===200){
-        //getUserList();
         alert("Stacja pogodowa została usunięta")
         getUserStationList();
       }

@@ -5,9 +5,8 @@ import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 import Chart from "./Chart"
 
 import {useSearchParams, useNavigate} from 'react-router-dom';
-//import 'SideNavigation.js'
 
-//https://codereview.stackexchange.com/questions/235854/react-setstate-function-in-useeffect
+import {BASE_SERVER_URL} from '../ServerURL'
 
 function ArchivalData(props) {
 
@@ -22,7 +21,7 @@ function ArchivalData(props) {
 
   const navigate = useNavigate();
 
-  const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
+  //const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
   //const BASE_SERVER_URL = "http://127.0.0.1:8080"
 
   const sleep = (milliseconds) => {
@@ -77,15 +76,11 @@ function ArchivalData(props) {
   })
 
   const getUserStationList = () => {
-    //TODO add status check
-    //TODO empty list catch
-    //fetch(`http://127.0.0.1:8080/api/user/get-user-stationlist/`+stateToken)
     fetch(BASE_SERVER_URL+`/api/user/get-user-stationlist/`+stateToken)
         .then(res => res.json())
         .then(response => {
             setStateMyStationList(response['myStationList'])
             setStateBookmarkStationList(response['bookmarkStationList'])
-            //console.log(response)
         })
   }
 

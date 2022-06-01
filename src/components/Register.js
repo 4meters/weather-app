@@ -4,8 +4,7 @@ import { useNavigate } from "react-router";
 import NavList from "./NavList";
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 
-
-//https://codereview.stackexchange.com/questions/235854/react-setstate-function-in-useeffect
+import {BASE_SERVER_URL} from '../ServerURL'
 
 function Register(props) {
 
@@ -16,7 +15,7 @@ function Register(props) {
   const [stateIsRegistered,setStateIsRegistered] = useState(false);
   const [stateIsFailedRegister,setStateIsFailedRegister] = useState(false);
 
-  const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
+  //const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
   //const BASE_SERVER_URL = "http://127.0.0.1:8080"
 
   const navigate = useNavigate();

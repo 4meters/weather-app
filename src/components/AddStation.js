@@ -1,14 +1,9 @@
 import React, { useState, useEffect} from "react";
 
-import {MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import {Icon} from 'leaflet'
-import {Navigation} from 'react-minimal-side-navigation';
 import NavList from "./NavList";
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 import {useNavigate} from "react-router-dom";
-import {withRouter} from '../withRouter'
-//import 'SideNavigation.js'
-
+import {BASE_SERVER_URL} from '../ServerURL'
 
 function AddStation(props) {
 
@@ -17,8 +12,9 @@ function AddStation(props) {
   const [stateStationId,setStateStationId] = useState("");
   const [stateStationKey,setStateStationKey] = useState("");
   const navigate = useNavigate();
+
   //const BASE_SERVER_URL = "http://localhost:8000"
-  const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
+  //const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
 
   const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))

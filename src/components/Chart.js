@@ -1,14 +1,15 @@
-import React, { PureComponent, useState } from 'react';
-import { LineChart, AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import React, {PureComponent} from 'react';
+import {LineChart, AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend} from 'recharts';
 
 import DateTimePicker from 'react-datetime-picker';
 
 import {format, differenceInHours, startOfMonth,
-  startOfWeek, startOfDay, endOfDay, sub, isThisSecond} from 'date-fns';
+  startOfWeek, startOfDay, endOfDay, sub} from 'date-fns';
+
+import {BASE_SERVER_URL} from '../ServerURL'
 
 
-
-const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
+//const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
 //const BASE_SERVER_URL = "http://127.0.0.1:8080"
 
 export default class Chart extends PureComponent {

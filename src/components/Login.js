@@ -42,7 +42,6 @@ function Login(props) {
   }
 
   useEffect(() =>{
-    console.log("Logged in:"+stateIsLoggedIn)
     let token=localStorage.getItem('token');
     if(typeof(token)==="string"){
       if(token.length>0){
@@ -55,7 +54,8 @@ function Login(props) {
     }
     else{
       setStateIsLoggedIn(false);
-      }
+    }
+    console.log("Logged in:"+stateIsLoggedIn)
   }, [])
 
 
@@ -252,7 +252,7 @@ function Login(props) {
             <label>Nowe hasło:<p/>
               <input type="password" value={stateNewPassword} onChange={handleChangeNewPassword} />
             </label><p/>
-            <input type="submit" value="Change password" />
+            <input type="submit" value="Zmień hasło" />
           </form>
           </>}
         

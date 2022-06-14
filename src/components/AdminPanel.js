@@ -495,6 +495,8 @@ function AdminPanel(props) {
 </div>
 
       <div>
+      <h1>Panel administracyjny</h1>
+      <hr style={{marginTop:"-20px", marginBottom:"0px"}}/>
       {!stateIsLoggedIn || !stateIsAdmin ?
         <div className="Login">
           <h3>Musisz się zalogować z użyciem danych konta administratora</h3>
@@ -504,7 +506,7 @@ function AdminPanel(props) {
         </div>
         : <div className="StationList">
           <div className="my-stations">
-            <h1>Panel administracyjny</h1>
+            
             <Flex><h2>Stacje pogodowe</h2><button onClick={()=>{setStateIsAddingNewStation(true)}}>Dodaj stację do bazy danych</button></Flex>
             
             {stateIsAddingNewStation ? <>

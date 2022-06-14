@@ -30,7 +30,6 @@ function UserStationList(props) {
 
 
   useEffect(() =>{
-    console.log("Logged in:"+stateIsLoggedIn)
     let token=localStorage.getItem('token');
     if(typeof(token)==="string"){
       if(token.length>0){
@@ -43,7 +42,8 @@ function UserStationList(props) {
     }
     else{
       setStateIsLoggedIn(false);
-      }
+    }
+    console.log("Logged in:"+stateIsLoggedIn)
   }, [])
 
   useEffect(()=>{
@@ -125,7 +125,7 @@ function UserStationList(props) {
         "removeMeasures": true
     })
     };
-    fetch(BASE_SERVER_URL+`/api/user/remove-station`,requestParams)
+    fetch(BASE_SERVER_URL+`/api/station/remove-station`,requestParams)
     .then(response => {
       if(response.status===200){
         alert("Stacja pogodowa została usunięta")

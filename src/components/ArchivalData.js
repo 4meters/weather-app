@@ -40,8 +40,6 @@ function ArchivalData(props) {
     if(stateStationId!=null){
       getStationName();
     }
-
-    console.log("Logged in:"+stateIsLoggedIn)
     console.log(stateToken);
     let token=localStorage.getItem('token');
     if(typeof(token)==="string"){
@@ -57,7 +55,7 @@ function ArchivalData(props) {
     else{
       setStateIsLoggedIn(false);
     }
-    
+    console.log("Logged in:"+stateIsLoggedIn)
   }, [])
 
   useEffect(()=>{

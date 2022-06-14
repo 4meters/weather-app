@@ -68,6 +68,9 @@ function AddStation(props) {
         .then(response => {
             if(response.status==200){
               navigate("/add-station-on-map?stationId="+stateStationId)
+            }
+            else{
+              alert("Podano niepoprawne id stacji lub klucz")
             }            
         })
   }

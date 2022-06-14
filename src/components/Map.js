@@ -63,15 +63,15 @@ function Map(props){
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  let REFRESH_TIME = 1000 * 60 * 5; //=5min
 
   const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
   }
 
+  let REFRESH_TIME = 1000 * 60 * 5; //=5min
+
   useEffect(()=>{
     let token=localStorage.getItem('token');
-    console.log(searchParams.get('stationId'));
     setStateShowMarker(searchParams.get('stationId'));
     showMarker();
 
@@ -91,9 +91,8 @@ function Map(props){
       }
     console.log("Logged in:"+stateIsLoggedIn)
     refreshMarkers();
-    const updateTimer = setInterval(() => refreshMarkers(), REFRESH_TIME); //refresh every 5min
-    
-
+    const updateTimer = setInterval(() => refreshMarkers(), REFRESH_TIME);      //refresh every 5min
+  
   }, [])
 
   useEffect(()=>{
@@ -118,7 +117,7 @@ function Map(props){
 
 
   const showMarker = async() => {
-    await sleep(2000) //wait for setting react state...
+    await sleep(2500) //wait for setting react state...
     const map = mapRef.current;
     if (!map) {
       return;
@@ -149,7 +148,7 @@ function Map(props){
 
     for(let i=0; i<sizePrivateMarkers; i++){
       for(let j=0; j<sizeMarkers; j++){
-        if(stateMarkers[j]!=undefined && statePrivateMarkers[j]!=undefined){
+        if(stateMarkers[j]!=undefined && statePrivateMarkers[i]!=undefined){
         if(stateMarkers[j][2]===statePrivateMarkers[i][2]){
           let markersList = stateMarkers;
           markersList.splice(j, 1);
@@ -160,7 +159,7 @@ function Map(props){
 
     for(let i=0; i<sizeBookmarkMarkers; i++){
       for(let j=0; j<sizeMarkers; j++){
-        if(stateMarkers[j]!=undefined && stateBookmarkMarkers[j]!=undefined){
+        if(stateMarkers[j]!=undefined && stateBookmarkMarkers[i]!=undefined){
         if(stateMarkers[j][2]===stateBookmarkMarkers[i][2]){
           let markersList = stateMarkers;
           markersList.splice(j, 1);

@@ -4,10 +4,16 @@ Client part of weather monitoring app project.
 Live demo: https://4meters.github.io/weather-app/ (wait 1 minute for marker display, server is hosted on Heroku, so needs time to boot from sleep)
 
 Server app: https://github.com/4meters/weather-server
+
 Measure script: https://github.com/4meters/weather-measure-script
 
 ## Main features:
--
+- Map of stations
+- Archival data presented with chart
+- Login and register
+- Add new station on map
+- User station list
+- Administrative panel
 
 ## Technologies used for implementing project
 ### Database:

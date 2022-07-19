@@ -46,5 +46,10 @@ Measure script: https://github.com/4meters/weather-measure-script
 - react-router-dom
 
 ## How to run:
-npm install
-npm start
+Node 16+ required
+
+In cmd, in main project directory:
+
+`npm install`
+
+`npm start`

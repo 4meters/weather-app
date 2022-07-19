@@ -27,8 +27,7 @@ export default class Chart extends PureComponent {
       chartType: "max",
       chartValue: "temp",
       chartYAxisUnit: "°C",
-      chartWidth: 700,
-      screenWidth: window.innerWidth
+      chartWidth: 700
     };
   }
   
@@ -37,25 +36,19 @@ export default class Chart extends PureComponent {
   componentDidMount() {
     console.log("stationId: "+this.props.stationId)
     const updateDimensions = () => {
-      this.setState({screenWidth: window.innerWidth})
-      this.setChartWidth();
+      let width = window.innerWidth;
+      if(width < 700){
+        this.setState({chartWidth: width})
+      }
+      else{
+        this.setState({chartWidth: 700})
+      }
     }
     window.addEventListener('resize', updateDimensions)
-    this.setChartWidth();
+    //this.setChartWidth();
     console.log(window.innerWidth)
     this.getMeasureList();
     console.log(this.state.measuresList)
-  }
-    
-  
-  setChartWidth(){
-    let width = window.innerWidth;
-    if(width < 700){
-      this.setState({chartWidth: width})
-    }
-    else{
-      this.setState({chartWidth: 700})
-    }
   }
 
 

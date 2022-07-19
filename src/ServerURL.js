@@ -1,4 +1,4 @@
-//Tutaj można zmienić adres serwera z którego korzysta aplikacja kliencka.
+//Here you can change server URL which uses client app
 //
 
 export const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"

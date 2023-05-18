@@ -1,7 +1,7 @@
 # Weather App - client app
 Client part of weather monitoring app project.
 
-Live demo: https://4meters.github.io/weather-app/ (wait 1 minute for marker display, server is hosted on Heroku, so needs time to boot from sleep)
+Live demo: https://4meters.github.io/weather-app/ (wait 1 minute for marker display, server is hosted on fly.io, so needs time to boot from sleep)
 
 Server app: https://github.com/4meters/weather-server
 

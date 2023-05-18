@@ -34,7 +34,7 @@ export default class Chart extends PureComponent {
 
 
   componentDidMount() {
-    console.log("stationId: "+this.props.stationId)
+    //console.log("stationId: "+this.props.stationId)
     const updateDimensions = () => {
       let width = window.innerWidth;
       if(width < 700){
@@ -45,10 +45,9 @@ export default class Chart extends PureComponent {
       }
     }
     window.addEventListener('resize', updateDimensions)
-    //this.setChartWidth();
-    console.log(window.innerWidth)
+    //console.log(window.innerWidth)
     this.getMeasureList();
-    console.log(this.state.measuresList)
+    //console.log(this.state.measuresList)
   }
 
 

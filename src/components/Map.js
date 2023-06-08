@@ -500,18 +500,25 @@ function Map(props){
                 <WiHumidity size={24}/><p style={pStyle1}>{data[3]['humidity']}%</p>
                 <WiBarometer size={24}/><p style={pStyle1}>{data[3]['pressure']}hPa</p>
                 </Flex>
-                <Flex style={flexStyle1} justifySpaceBetween><p><b>PM2.5: </b></p><p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p></Flex>
-                <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
-                {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}
-                
-                <Flex style={flexStyle1} justifySpaceBetween><p style={{marginRight:"3px"}}><b>PM2.5 z korekcją: </b></p><p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p></Flex>
-                <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
-                {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}
-                
-                <Flex style={flexStyle1} justifySpaceBetween><p><b>PM10: </b></p><p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p></Flex>
-                <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
-                {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}
-                
+                {data[3]['pm25'] ? 
+                    <><Flex style={flexStyle1} justifySpaceBetween><p><b>PM2.5: </b></p><p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p></Flex>
+                    <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
+                    {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}</>
+                 : null}
+                 
+                 {data[3]['pm25Corr'] ?
+                    <><Flex style={flexStyle1} justifySpaceBetween><p style={{marginRight:"3px"}}><b>PM2.5 z korekcją: </b></p><p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p></Flex>
+                    <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
+                    {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}</>
+                 : null 
+                 }
+                 
+                 {data[3]['pm10'] ?
+                    <><Flex style={flexStyle1} justifySpaceBetween><p><b>PM10: </b></p><p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p></Flex>
+                    <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
+                    {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}</>
+                 : null
+                 }                
                 <Flex>
                 <WiTime9 size={24}/><p style={{marginTop:"5px"}}>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>
                 </Flex>
@@ -566,17 +573,25 @@ function Map(props){
                  <WiHumidity size={24}/><p style={pStyle1}>{data[3]['humidity']}%</p>
                  <WiBarometer size={24}/><p style={pStyle1}>{data[3]['pressure']}hPa</p>
                  </Flex>
-                 <Flex style={flexStyle1} justifySpaceBetween><p><b>PM2.5: </b></p><p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p></Flex>
-                 <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
-                 {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}
+                 {data[3]['pm25'] ? 
+                    <><Flex style={flexStyle1} justifySpaceBetween><p><b>PM2.5: </b></p><p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p></Flex>
+                    <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
+                    {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}</>
+                 : null}
                  
-                 <Flex style={flexStyle1} justifySpaceBetween><p style={{marginRight: "3px"}}><b>PM2.5 z korekcją: </b></p><p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p></Flex>
-                 <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
-                 {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}
+                 {data[3]['pm25Corr'] ?
+                    <><Flex style={flexStyle1} justifySpaceBetween><p style={{marginRight:"3px"}}><b>PM2.5 z korekcją: </b></p><p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p></Flex>
+                    <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
+                    {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}</>
+                 : null 
+                 }
                  
-                 <Flex style={flexStyle1} justifySpaceBetween><p><b>PM10: </b></p><p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p></Flex>
-                 <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
-                 {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}
+                 {data[3]['pm10'] ?
+                    <><Flex style={flexStyle1} justifySpaceBetween><p><b>PM10: </b></p><p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p></Flex>
+                    <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
+                    {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}</>
+                 : null
+                 }         
                  
                  <Flex>
                   <WiTime9 size={24}/><p style={{marginTop:"5px"}}>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>

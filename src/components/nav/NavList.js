@@ -48,6 +48,11 @@ function NavList() {
               itemId: '/configure-station',
               elemBefore: () => <></>,
             },
+            {
+              title: 'Panel administracyjny',
+              itemId: '/admin-panel',
+              elemBefore: () => <></>,
+            },
           ]}
         />
       </>

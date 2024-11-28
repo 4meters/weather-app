@@ -1,29 +1,23 @@
 import React, { useState, useEffect} from "react";
 import { useNavigate } from "react-router";
 
-import NavList from "./NavList";
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 
 import {BASE_SERVER_URL} from '../ServerURL'
+import SideMenu from "./nav/SideMenu";
+import Header from "./styling-components/Header";
+import {Button} from "react-bootstrap";
 
 function Register(props) {
 
 
-  const [stateFirstRun,setStateFirstRun] = useState(true);
   const [stateLogin,setStateLogin] = useState("");
   const [statePassword,setStatePassword] = useState("");
   const [stateIsRegistered,setStateIsRegistered] = useState(false);
   const [stateIsFailedRegister,setStateIsFailedRegister] = useState(false);
 
-  //const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
-  //const BASE_SERVER_URL = "http://127.0.0.1:8080"
-
   const navigate = useNavigate();
 
-
-  const sleep = (milliseconds) => {
-    return new Promise(resolve => setTimeout(resolve, milliseconds))
-  }
 
   const validateLoginData = () => {
     if(stateLogin.length>=3 && statePassword.length>=8){
@@ -32,7 +26,6 @@ function Register(props) {
     else{
       return false;
     }
-
   }
 
   
@@ -83,46 +76,45 @@ function Register(props) {
   }
 
   return (
-    <>   
-<div>
-  <NavList/>
-</div>
-
-      <div>
-      <h1>Rejestracja</h1>
-      <hr style={{marginTop:"-20px", marginBottom:"0px"}}/>
-      {!stateIsRegistered ?
-        <div id="Login">
-          <form onSubmit={handleRegisterUser}>
-            <label>Login:<p/>
-              <input type="text" value={stateLogin} onChange={handleChangeLogin} />
-            </label>
-            <p/>
-            <label>Hasło:<p/>
-              <input type="password" value={statePassword} onChange={handleChangePassword} />
-            </label><p/>
-            <input type="submit" value="Zarejestruj" />
-          </form>
-          <div>
-          </div>
-          <h3>Posiadasz już konto?</h3>
-          <div>
-            <button onClick={handleClickLogin}>Zaloguj się</button>
-          </div>
-          
+      <>
+        <div>
+          <SideMenu/>
         </div>
-        : 
-          
-          <div id="GoToLogin">
-          <h3>Zarejestrowano</h3>
-          <button onClick={handleClickLogin}>Przejdź do strony logowania</button>
-          </div>
-          
 
-      }
-      
-      </div>
-    </>
+        <div className="content-padding">
+          <Header headerText="Rejestracja"/>
+          {!stateIsRegistered ?
+              <div id="login">
+                <form onSubmit={handleRegisterUser}>
+                  <label>Login:<p/>
+                    <input className="form-control" type="text" value={stateLogin} onChange={handleChangeLogin}/>
+                  </label>
+                  <p/>
+                  <label>Hasło:<p/>
+                    <input className="form-control" type="password" value={statePassword} onChange={handleChangePassword}/>
+                  </label><p/>
+                  <input className="btn btn-primary" type="submit" value="Zarejestruj"/>
+                </form>
+                <div>
+                </div>
+                <h3 className="mt16">Posiadasz już konto?</h3>
+                <div>
+                  <Button onClick={handleClickLogin}>Zaloguj się</Button>
+                </div>
+
+              </div>
+              :
+
+              <div id="registered">
+                <h3>Zarejestrowano</h3>
+                <Button onClick={handleClickLogin}>Przejdź do strony logowania</Button>
+              </div>
+
+
+          }
+
+        </div>
+      </>
   )
 }
 

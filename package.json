@@ -1,20 +1,22 @@
 {
   "name": "weather-app",
-  "homepage": "https://4meters.github.io/weather-app/",
   "version": "0.1.0",
+  "homepage": "https://4meters.github.io/weather-app/",
   "private": true,
   "dependencies": {
     "@react-css/flex": "^1.6.2",
     "@testing-library/jest-dom": "^5.16.1",
     "@testing-library/react": "^12.1.2",
     "@testing-library/user-event": "^13.5.0",
+    "bootstrap": "^5.3.3",
     "date-fns": "^2.28.0",
     "gh-pages": "^4.0.0",
     "invariant": "^2.2.4",
     "leaflet": "^1.5.1",
     "prop-types": "^15.8.1",
     "react": "^17.0.2",
-    "react-bluetooth": "^0.0.0",
+    "react-bootstrap": "^2.10.6",
+    "react-burger-menu": "^3.0.9",
     "react-datetime-picker": "^3.5.0",
     "react-dom": "^17.0.2",
     "react-editext": "^4.2.1",
@@ -29,7 +31,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-	"predeploy": "npm run build",
+    "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -52,5 +54,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "sass": "^1.81.0"
   }
 }

@@ -11,7 +11,7 @@ import UserStationList from "./components/UserStationList"
 import AdminPanel from "./components/AdminPanel";
 import ConfigureStation from "./components/ConfigureStation";
 
-class _Routes extends React.Component{
+class AppRoutes extends React.Component{
     render(){
         return(
             <BrowserRouter basename={process.env.PUBLIC_URL}>
@@ -39,4 +39,4 @@ class _Routes extends React.Component{
         )
     }
 }
-export default _Routes;
+export default AppRoutes;

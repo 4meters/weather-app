@@ -5,8 +5,6 @@ import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 
 import L from 'leaflet';
 
-import NavList from "./NavList";
-
 import { useRef } from "react";
 
 import {useNavigate,useSearchParams} from "react-router-dom";
@@ -21,6 +19,8 @@ import Flex from '@react-css/flex'
 
 import {BASE_SERVER_URL} from '../ServerURL'
 
+import SideMenu from "./nav/SideMenu";
+import {Button} from "react-bootstrap";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -148,7 +148,7 @@ function Map(props){
 
     for(let i=0; i<sizePrivateMarkers; i++){
       for(let j=0; j<sizeMarkers; j++){
-        if(stateMarkers[j]!=undefined && statePrivateMarkers[i]!=undefined){
+        if(stateMarkers[j]!==undefined && statePrivateMarkers[i]!==undefined){
         if(stateMarkers[j][2]===statePrivateMarkers[i][2]){
           let markersList = stateMarkers;
           markersList.splice(j, 1);
@@ -159,7 +159,7 @@ function Map(props){
 
     for(let i=0; i<sizeBookmarkMarkers; i++){
       for(let j=0; j<sizeMarkers; j++){
-        if(stateMarkers[j]!=undefined && stateBookmarkMarkers[i]!=undefined){
+        if(stateMarkers[j]!==undefined && stateBookmarkMarkers[i]!==undefined){
         if(stateMarkers[j][2]===stateBookmarkMarkers[i][2]){
           let markersList = stateMarkers;
           markersList.splice(j, 1);
@@ -323,32 +323,32 @@ function Map(props){
     switch(level){
       case 0:{
         return(
-          <div style={{backgroundColor: "rgb(0, 153, 0)"}}><h3 style={{color: "#FFFFFF"}}>Bardzo dobry</h3></div>
+          <div style={{backgroundColor: "rgb(0, 153, 0)"}}><h6 style={{color: "#FFFFFF"}}>Bardzo dobry</h6></div>
         )
       }
       case 1:{
         return(
-        <div style={{backgroundColor: "rgb(153, 255, 51)"}}><h3>Dobry</h3></div>
+        <div style={{backgroundColor: "rgb(153, 255, 51)"}}><h6>Dobry</h6></div>
         )
       }
       case 2:{
         return(
-          <div style={{backgroundColor: "rgb(255, 255, 0)"}}><h3>Umiarkowany</h3></div>
+          <div style={{backgroundColor: "rgb(255, 255, 0)"}}><h6>Umiarkowany</h6></div>
         )
       }
       case 3:{
         return(
-          <div style={{backgroundColor: "rgb(255, 102, 0)"}}><h3 style={{color: "#FFFFFF"}}>Dostateczny</h3></div>
+          <div style={{backgroundColor: "rgb(255, 102, 0)"}}><h6 style={{color: "#FFFFFF"}}>Dostateczny</h6></div>
         )
       }
       case 4:{
         return(
-          <div style={{backgroundColor: "rgb(255, 0, 0)"}}><h3 style={{color: "#FFFFFF"}}>Zły</h3></div>
+          <div style={{backgroundColor: "rgb(255, 0, 0)"}}><h6 style={{color: "#FFFFFF"}}>Zły</h6></div>
         )
       }
       case 5:{
         return(
-          <div style={{backgroundColor: "rgb(153, 0, 0)"}}><h3 style={{color: "#FFFFFF"}}>Bardzo zły</h3></div>
+          <div style={{backgroundColor: "rgb(153, 0, 0)"}}><h6 style={{color: "#FFFFFF"}}>Bardzo zły</h6></div>
         )
       }
     }
@@ -397,7 +397,9 @@ function Map(props){
   });
 
   const pStyle1={marginTop:"5px",marginLeft:"-5px"};
-  const flexStyle1={marginTop: "-10px", marginBottom: "-20px"}
+
+  const flexStyle1={marginTop: "-8px", marginBottom: "-25px", marginLeft: "-8px"}
+  const flexStyle2={marginTop: "-10px", marginBottom: "-20px"}
 
   const renderMarkersList = (markers) =>{
     deDuplicateStations();
@@ -405,7 +407,7 @@ function Map(props){
       //show marker
       let ref1;
 
-      if(stateShowMarker!="" && stateShowMarker===data[2]){
+      if(stateShowMarker!=="" && stateShowMarker===data[2]){
         ref1=markerRef;
         console.log("Found marker!")
       }
@@ -413,61 +415,70 @@ function Map(props){
         ref1=null;
       }
       return (
-        <Marker ref={ref1} key={`marker-${idx}`} position={[data[0], data[1]]}>
-               <Popup>
-                 <Flex justifySpaceBetween style={{marginTop:"-14px", paddingRight:"10px"}}>
-                 <h3 style={{marginBottom:"10px"}}>{data[4]}</h3>
-                 {stateIsLoggedIn ? 
-                 <>
-                 {checkBookmark(data[2])?
-                  <div><button value={data[2]} onClick={() => handleBookmarkButtonClick(data[2],"remove")}><BsBookmarkDashFill/></button>
-                  </div> 
-                  : <div><button value={data[2]} onClick={() => handleBookmarkButtonClick(data[2],"add")}><BsBookmarkPlus/></button>
-                  </div>}
-                  
-                 </> : <></>}
-                 </Flex>
+          <Marker ref={ref1} key={`marker-${idx}`} position={[data[0], data[1]]}>
+            <Popup>
+              <Flex justifySpaceBetween style={{marginTop: "-4px", paddingRight: "10px"}}>
+                <h5 style={{marginBottom: "10px"}}>{data[4]}</h5>
+                {stateIsLoggedIn ?
+                    <>
+                      {checkBookmark(data[2]) ?
+                          <div>
+                            <Button size="sm" variant="secondary" className="no-padding" value={data[2]} onClick={() => handleBookmarkButtonClick(data[2], "remove")}>
+                              <BsBookmarkDashFill/></Button>
+                          </div>
+                          : <div>
+                            <Button size="sm" variant="secondary" className="no-padding" value={data[2]} onClick={() => handleBookmarkButtonClick(data[2], "add")}>
+                              <BsBookmarkPlus/></Button>
+                          </div>}
 
-                 <p style={{fontSize: "10px", marginTop: "-10px"}}>id: {data[2]} </p>
-                 
-                 
-                 {typeof(data[3])!="undefined" ? <> 
-                 <Flex style={flexStyle1}>
-                 <WiThermometer size={24}/><p style={pStyle1}>{data[3]['temp']}°C</p>
-                 <WiHumidity size={24}/><p style={pStyle1}>{data[3]['humidity']}%</p>
-                 <WiBarometer size={24}/><p style={pStyle1}>{data[3]['pressure']}hPa</p>
-                 </Flex>
-                 {data[3]['pm25'] ? 
-                    <><Flex style={flexStyle1} justifySpaceBetween><p><b>PM2.5: </b></p><p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p></Flex>
-                    <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
-                    {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}</>
-                 : null}
-                 
-                 {data[3]['pm25Corr'] ?
-                    <><Flex style={flexStyle1} justifySpaceBetween><p style={{marginRight:"3px"}}><b>PM2.5 z korekcją: </b></p><p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p></Flex>
-                    <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
-                    {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}</>
-                 : null 
-                 }
-                 
-                 {data[3]['pm10'] ?
-                    <><Flex style={flexStyle1} justifySpaceBetween><p><b>PM10: </b></p><p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p></Flex>
-                    <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
-                    {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}</>
-                 : null
-                 }
-                 
-                 <Flex>
-                  <WiTime9 size={24}/><p style={{marginTop:"5px"}}>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>
-                 </Flex>
-                 <div id="stats">
-                   <button value={data[2]} onClick={handleArchivalDataButtonClick}>Dane archiwalne</button>
-                 </div>
-                 </> : <></>
-                 }
-               </Popup>
-             </Marker>
-             
+                    </> : <></>}
+              </Flex>
+
+              <p style={{fontSize: "10px", marginTop: "-10px"}}>id: {data[2]} </p>
+
+
+              {typeof (data[3]) != "undefined" ? <>
+                <Flex style={flexStyle1}>
+                  <WiThermometer size={24}/><p style={pStyle1}>{data[3]['temp']}°C</p>
+                  <WiHumidity size={24}/><p style={pStyle1}>{data[3]['humidity']}%</p>
+                  <WiBarometer size={24}/><p style={pStyle1}>{data[3]['pressure']}hPa</p>
+                </Flex>
+                {data[3]['pm25'] ?
+                    <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM2.5: </b></p>
+                      <p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25']) / 25 * 100)}%</p></Flex>
+                      <p style={{fontSize: "8px", marginTop: "2px", marginBottom: "0px"}}>Indeks</p>
+                      {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}</>
+                    : null}
+
+                {data[3]['pm25Corr'] ?
+                    <><Flex style={flexStyle2} justifySpaceBetween><p style={{marginRight: "3px"}}><b>PM2.5 z
+                      korekcją: </b></p>
+                      <p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr']) / 25 * 100)}%</p></Flex>
+                      <p style={{fontSize: "8px", marginTop: "2px", marginBottom: "0px"}}>Indeks</p>
+                      {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}</>
+                    : null
+                }
+
+                {data[3]['pm10'] ?
+                    <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM10: </b></p>
+                      <p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10']) / 50 * 100)}%</p></Flex>
+                      <p style={{fontSize: "8px", marginTop: "2px", marginBottom: "0px"}}>Indeks</p>
+                      {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}</>
+                    : null
+                }
+
+                <Flex className="padding-top-8 ml-4">
+                  <WiTime9 size={24}/><p
+                    style={{marginTop: "5px"}}>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>
+                </Flex>
+                <div id="stats">
+                  <Button variant="secondary" size="sm" value={data[2]} onClick={handleArchivalDataButtonClick}>Dane archiwalne</Button>
+                </div>
+              </> : <></>
+              }
+            </Popup>
+          </Marker>
+
       )
     }))
   }
@@ -478,7 +489,7 @@ function Map(props){
       //show marker
       let ref1;
 
-      if(stateShowMarker!="" && stateShowMarker===data[2]){
+      if(stateShowMarker!=="" && stateShowMarker===data[2]){
         ref1=markerRef;
         console.log("Found marker!")
       }
@@ -489,7 +500,7 @@ function Map(props){
       return (
         <Marker ref={ref1} key={`marker-${idx}`} position={[data[0], data[1]]}  icon={greenMarker}>
                <Popup>
-                <h3>{data[4]}</h3>
+                 <h5 style={{marginBottom: "10px"}}>{data[4]}</h5>
 
                 <p style={{fontSize: "10px", marginTop: "-10px"}}>id: {data[2]} </p>
                  
@@ -501,29 +512,29 @@ function Map(props){
                 <WiBarometer size={24}/><p style={pStyle1}>{data[3]['pressure']}hPa</p>
                 </Flex>
                 {data[3]['pm25'] ? 
-                    <><Flex style={flexStyle1} justifySpaceBetween><p><b>PM2.5: </b></p><p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p></Flex>
-                    <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
+                    <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM2.5: </b></p><p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p></Flex>
+                    <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
                     {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}</>
                  : null}
                  
                  {data[3]['pm25Corr'] ?
-                    <><Flex style={flexStyle1} justifySpaceBetween><p style={{marginRight:"3px"}}><b>PM2.5 z korekcją: </b></p><p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p></Flex>
-                    <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
+                    <><Flex style={flexStyle2} justifySpaceBetween><p style={{marginRight:"3px"}}><b>PM2.5 z korekcją: </b></p><p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p></Flex>
+                    <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
                     {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}</>
                  : null 
                  }
                  
                  {data[3]['pm10'] ?
-                    <><Flex style={flexStyle1} justifySpaceBetween><p><b>PM10: </b></p><p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p></Flex>
-                    <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
+                    <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM10: </b></p><p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p></Flex>
+                    <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
                     {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}</>
                  : null
                  }                
-                <Flex>
+                <Flex className="padding-top-8 ml-4">
                 <WiTime9 size={24}/><p style={{marginTop:"5px"}}>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>
                 </Flex>
                 <div id="stats">
-                  <button value={data[2]} onClick={handleArchivalDataButtonClick}>Dane archiwalne</button>
+                  <Button variant="secondary" size="sm" value={data[2]} onClick={handleArchivalDataButtonClick}>Dane archiwalne</Button>
                 </div>
                 </> : <></>
                 }
@@ -540,7 +551,7 @@ function Map(props){
       //show marker
       let ref1;
 
-      if(stateShowMarker!="" && stateShowMarker===data[2]){
+      if(stateShowMarker!=="" && stateShowMarker===data[2]){
         ref1=markerRef;
         console.log("Found marker!")
       }
@@ -551,14 +562,14 @@ function Map(props){
       return (
         <Marker ref={ref1} key={`marker-${idx}`} position={[data[0], data[1]]} icon={goldMarker}>
                <Popup>
-                 <Flex justifySpaceBetween style={{marginTop:"-14px", paddingRight:"10px"}}>
-                 <h3 style={{marginBottom:"10px"}}>{data[4]}</h3>
+                 <Flex justifySpaceBetween style={{marginTop:"-4px", paddingRight:"10px"}}>
+                   <h5 style={{marginBottom: "10px"}}>{data[4]}</h5>
                  {stateIsLoggedIn ? 
                  <>
                  {checkBookmark(data[2])?
-                  <div><button value={data[2]} onClick={() => handleBookmarkButtonClick(data[2],"remove")}><BsBookmarkDashFill/></button>
+                  <div><Button variant="secondary" size="sm" className="no-padding" value={data[2]} onClick={() => handleBookmarkButtonClick(data[2],"remove")}><BsBookmarkDashFill/></Button>
                   </div> 
-                  : <div><button value={data[2]} onClick={() => handleBookmarkButtonClick(data[2],"add")}><BsBookmarkPlus/></button>
+                  : <div><Button variant="secondary" size="sm" className="no-padding" value={data[2]} onClick={() => handleBookmarkButtonClick(data[2],"add")}><BsBookmarkPlus/></Button>
                   </div>}
                   
                  </> : <></>}
@@ -574,30 +585,30 @@ function Map(props){
                  <WiBarometer size={24}/><p style={pStyle1}>{data[3]['pressure']}hPa</p>
                  </Flex>
                  {data[3]['pm25'] ? 
-                    <><Flex style={flexStyle1} justifySpaceBetween><p><b>PM2.5: </b></p><p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p></Flex>
-                    <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
+                    <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM2.5: </b></p><p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p></Flex>
+                    <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
                     {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}</>
                  : null}
                  
                  {data[3]['pm25Corr'] ?
-                    <><Flex style={flexStyle1} justifySpaceBetween><p style={{marginRight:"3px"}}><b>PM2.5 z korekcją: </b></p><p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p></Flex>
-                    <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
+                    <><Flex style={flexStyle2} justifySpaceBetween><p style={{marginRight:"3px"}}><b>PM2.5 z korekcją: </b></p><p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p></Flex>
+                    <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
                     {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}</>
                  : null 
                  }
                  
                  {data[3]['pm10'] ?
-                    <><Flex style={flexStyle1} justifySpaceBetween><p><b>PM10: </b></p><p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p></Flex>
-                    <p style={{fontSize: "8px", marginTop: "-15px", marginBottom:"-10px"}}>Indeks</p>
+                    <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM10: </b></p><p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p></Flex>
+                    <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
                     {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}</>
                  : null
                  }         
                  
-                 <Flex>
+                 <Flex className="padding-top-8 ml-4">
                   <WiTime9 size={24}/><p style={{marginTop:"5px"}}>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>
                  </Flex>
                  <div id="stats">
-                   <button value={data[2]} onClick={handleArchivalDataButtonClick}>Dane archiwalne</button>
+                   <Button variant="secondary" size="sm" value={data[2]} onClick={handleArchivalDataButtonClick}>Dane archiwalne</Button>
                  </div>
                  </> : <></>
                  }
@@ -612,10 +623,7 @@ function Map(props){
     <>
     <div style={{display: "flex", flexDirection: "column"}}>
       <div style={{display: "flex", flex:1}}>
-        <NavList/>
-        <div>
-          <button onClick={()=>{navigate('/admin-panel')}}>Panel administracyjny</button>
-        </div>
+        <SideMenu/>
       </div>
         <div id="map">
           <MapContainer whenCreated={(map) => {

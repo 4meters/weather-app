@@ -1,12 +1,13 @@
 import React, { useState, useEffect} from "react";
 
-import NavList from "./NavList";
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 import Chart from "./Chart"
 
 import {useSearchParams, useNavigate} from 'react-router-dom';
 
 import {BASE_SERVER_URL} from '../ServerURL'
+import SideMenu from "./nav/SideMenu";
+import Header from "./styling-components/Header";
 
 function ArchivalData(props) {
 
@@ -20,9 +21,6 @@ function ArchivalData(props) {
   const [stateStationName,setStateStationName] = useState("");
 
   const navigate = useNavigate();
-
-  //const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
-  //const BASE_SERVER_URL = "http://127.0.0.1:8080"
 
   const sleep = (milliseconds) => {
     return new Promise(resolve => setTimeout(resolve, milliseconds))
@@ -59,7 +57,7 @@ function ArchivalData(props) {
   }, [])
 
   useEffect(()=>{
-    if(stateIsLoggedIn==true){
+    if(stateIsLoggedIn === true){
       getUserStationList();
     }
     
@@ -106,61 +104,58 @@ function ArchivalData(props) {
 
 
   return (
-    <>   
-<div className="d-flex p-2 col-example">
-  <NavList/>
-</div>
-
-      <div className="d-flex p-2 col-example">
-        <div className="chart">
-          {stateStationId!=null ?
-          <>
-          <h1>Dane archiwalne</h1>
-          <hr style={{marginTop:"-20px", marginBottom:"0px"}}/>
-          <h2>{stateStationName}</h2>
-          <p style={{fontSize: "14px", marginTop: "-10px"}}>id: {stateStationId}</p>
-          <Chart stationId={stateStationId}/>
-          </>
-          :
-          <>
-          {stateIsLoggedIn? 
-          <>
-          <div className="StationList">
-            <h1>Dane archiwalne</h1>
-            <hr style={{marginTop:"-20px", marginBottom:"0px"}}/>
-          <div className="my-stations">
-            <h2>Moje stacje</h2>
-            {stateMyStationList.length>0 ? 
-            <>{renderStationItemListLite(stateMyStationList)}</>
-            :
-            <><p>(Pusta lista)</p>
-            </>
-            }
-            </div>
-            <div className="watched-stations">
-            <h2>Zakładki</h2>
-            {stateBookmarkStationList.length>0 ? 
-            <>{renderStationItemListLite(stateBookmarkStationList)}</>
-            :
-            <><p>(Pusta lista)</p>
-            </>
-            }
-            </div>
-          </div>
-          </> 
-          : <>
-          <h1>Dane archiwalne</h1>
-          <hr style={{marginTop:"-20px", marginBottom:"0px"}}/>
-          <h2>Należy wybrać opcję 'dane archiwalne' z znacznika stacji na mapie lub zalogować się</h2>
-          </>}
-          
-          </>
-          }
-          
+      <>
+        <div>
+          <SideMenu/>
         </div>
-      <p></p>
-      </div>
-    </>
+
+        <div className="content-padding">
+          <div className="chart">
+            {stateStationId != null ?
+                <>
+                  <Header headerText="Dane archiwalne"/>
+                  <h2>{stateStationName}</h2>
+                  <p style={{fontSize: "14px", marginTop: "-10px"}}>id: {stateStationId}</p>
+                  <Chart stationId={stateStationId}/>
+                </>
+                :
+                <>
+                  {stateIsLoggedIn ?
+                      <>
+                        <div className="StationList">
+                          <Header headerText="Dane archiwalne"/>
+                          <div className="my-stations">
+                            <h2>Moje stacje</h2>
+                            {stateMyStationList.length > 0 ?
+                                <>{renderStationItemListLite(stateMyStationList)}</>
+                                :
+                                <><p>(Pusta lista)</p>
+                                </>
+                            }
+                          </div>
+                          <div className="watched-stations">
+                            <h2>Zakładki</h2>
+                            {stateBookmarkStationList.length > 0 ?
+                                <>{renderStationItemListLite(stateBookmarkStationList)}</>
+                                :
+                                <><p>(Pusta lista)</p>
+                                </>
+                            }
+                          </div>
+                        </div>
+                      </>
+                      : <>
+                        <Header headerText="Dane archiwalne"/>
+                        <h2>Należy wybrać opcję 'dane archiwalne' z znacznika stacji na mapie lub zalogować się</h2>
+                      </>}
+
+                </>
+            }
+
+          </div>
+          <p></p>
+        </div>
+      </>
   )
 }
 

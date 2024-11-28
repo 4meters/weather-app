@@ -2,12 +2,14 @@ import React from "react";
 import ReactDOM from "react-dom";
 
 import "leaflet/dist/leaflet.css";
-import "./index.css";
+import "./index.scss";
 
-import _Routes from "./_Routes"
+import AppRoutes from "./AppRoutes"
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 
-const App = () => <_Routes />;
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+const App = () => <AppRoutes/>;
 
 const rootElement = document.getElementById("root");
 ReactDOM.render(<App />, rootElement);

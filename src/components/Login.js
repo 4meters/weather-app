@@ -1,10 +1,12 @@
 import React, { useState, useEffect} from "react";
 import { useNavigate } from "react-router";
 
-import NavList from "./NavList";
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 
 import {BASE_SERVER_URL} from '../ServerURL'
+import SideMenu from "./nav/SideMenu";
+import Header from "./styling-components/Header";
+import {Button} from "react-bootstrap";
 
 function Login(props) {
 
@@ -19,9 +21,6 @@ function Login(props) {
 
   const [stateToken,setStateToken] = useState("");
   const [stateIsLoggedIn,setStateIsLoggedIn] = useState(false);
-
-  //const BASE_SERVER_URL = "http://127.0.0.1:8080"
-  //const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
   
   const navigate = useNavigate();
 
@@ -128,7 +127,7 @@ function Login(props) {
     fetch(BASE_SERVER_URL+`/api/user/change-password`, requestParams)
         .then(res => {
           console.log(res.status)
-            if(res.status==201){
+            if(res.status === 201){
               setStateIsOnPasswordChange(false);
               alert("Hasło zostało zmienione")
             }
@@ -154,7 +153,7 @@ function Login(props) {
     fetch(BASE_SERVER_URL+`/api/user/remove-user`, requestParams)
         .then(res => {
           console.log(res.status)
-            if(res.status==200){
+            if(res.status === 200){
               setStateIsOnRemovingAccount(false);
               setStateToken("");
               setStateIsLoggedIn(false);
@@ -207,79 +206,80 @@ function Login(props) {
 
 
   return (
-    <>   
-<div>
-  <NavList/>
-</div>
-
       <div>
-      {!stateIsLoggedIn ?
-        <div id="Login">
-          <h1>Logowanie</h1>
-          <hr style={{marginTop:"-20px", marginBottom:"0px"}}/>
-          <form onSubmit={handleLoginUser}>
-            <label>Login:<p/>
-              <input type="text" value={stateLogin} onChange={handleChangeLogin} />
-            </label>
-            <p/>
-            <label>Hasło:<p/>
-              <input type="password" value={statePassword} onChange={handleChangePassword} />
-            </label><p/>
-            <input type="submit" value="Zaloguj się" />
-          </form>
-          <h3>Nie posiadasz konta?</h3>
-          <div>
-            <button onClick={handleClickRegister}>Zajerestruj się</button>
-          </div>
-        </div>
-        : <>
-
-        <div id="Profile">
-          <h1>Konto użytkownika</h1>
-          <hr style={{marginTop:"-20px", marginBottom:"0px"}}/>
-          
-          {!stateIsOnPasswordChange ? 
-          <>
-          <h3>{localStorage.getItem("login")}</h3>
-          <button onClick={handleClickChangePassword}>Zmień hasło</button>
-          </> 
-          : <>
-          <form onSubmit={handleChangePasswordRequest}>
-            <label>Stare hasło:<p/>
-              <input type="password" value={stateOldPassword} onChange={handleChangeOldPassword} />
-            </label>
-            <p/>
-            <label>Nowe hasło:<p/>
-              <input type="password" value={stateNewPassword} onChange={handleChangeNewPassword} />
-            </label><p/>
-            <input type="submit" value="Zmień hasło" />
-          </form>
-          </>}
-        
+        <div>
+          <SideMenu/>
         </div>
 
-        <div id="Logout">
-          <button onClick={handleClickLogout}>Wyloguj się</button>
+        <div className="content-padding">
+          {!stateIsLoggedIn ?
+              <div id="Login">
+                <Header headerText="Logowanie"/>
+                <form onSubmit={handleLoginUser}>
+                  <label>Login:<p/>
+                    <input className="form-control" type="text" value={stateLogin} onChange={handleChangeLogin}/>
+                  </label>
+                  <p/>
+                  <label>Hasło:<p/>
+                    <input className="form-control" type="password" value={statePassword} onChange={handleChangePassword}/>
+                  </label><p/>
+                  <input className="btn btn-primary" type="submit" value="Zaloguj się"/>
+                </form>
+                <h3 className="mt32">Nie posiadasz konta?</h3>
+                <div className="mt16">
+                  <Button onClick={handleClickRegister}>Zarejestruj się</Button>
+                </div>
+              </div>
+              : <>
+
+                <div id="Profile">
+                  <Header headerText="Konto użytkownika"/>
+
+                  {!stateIsOnPasswordChange ?
+                      <>
+                        <h3 className="mt16">{localStorage.getItem("login")}</h3>
+                        <Button className="mt8" onClick={handleClickChangePassword}>Zmień hasło</Button>
+                      </>
+                      : <>
+                        <form onSubmit={handleChangePasswordRequest}>
+                          <label>Stare hasło:<p/>
+                            <input type="password" value={stateOldPassword} onChange={handleChangeOldPassword}/>
+                          </label>
+                          <p/>
+                          <label>Nowe hasło:<p/>
+                            <input type="password" value={stateNewPassword} onChange={handleChangeNewPassword}/>
+                          </label><p/>
+                          <input className="btn btn-primary" type="submit" value="Zmień hasło"/>
+                        </form>
+                      </>}
+
+                </div>
+
+                <div id="Logout">
+                  <Button className="mt8" onClick={handleClickLogout}>Wyloguj się</Button>
+                </div>
+                {!stateIsOnRemovingAccount ?
+                    <div style={{paddingTop: "30px"}}>
+                      <Button variant="danger"
+                              onClick={() => handleRemoveUserButtonFirstStage()}>Usuń konto
+                      </Button>
+                    </div>
+                    : <div>
+                      <h3>Podaj hasło do konta aby je usunąć:</h3>
+                      <form onSubmit={handleRemoveUserSecondStage}>
+                        <label>Hasło:<p/>
+                          <input className="form-control" type="password" value={statePassword} onChange={handleChangePassword}/>
+                        </label>
+                        <p/>
+                        <input className="btn btn-danger" type="submit"
+                               value="Usuń konto"/>
+                      </form>
+                    </div>}
+              </>
+          }
+
         </div>
-        {!stateIsOnRemovingAccount ?
-        <div style={{paddingTop:"30px"}}>
-          <button style={{backgroundColor: "red", color: "white", borderRadius: "6px"}} onClick={()=>handleRemoveUserButtonFirstStage()}>Usuń konto</button>
-        </div>
-        : <div>
-          <h3>Podaj hasło do konta aby je usunąć:</h3>
-          <form onSubmit={handleRemoveUserSecondStage}>
-            <label>Hasło:<p/>
-              <input type="password" value={statePassword} onChange={handleChangePassword} />
-            </label>
-            <p/>
-            <input type="submit" style={{backgroundColor: "red", color: "white", borderRadius: "6px"}} value="Usuń konto" />
-          </form>
-          </div>}
-        </>
-      }
-      
       </div>
-    </>
   )
 }
 

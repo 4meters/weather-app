@@ -4,12 +4,10 @@ import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 
 import L from 'leaflet';
 
-
-import NavList from "./NavList";
-
 import {useNavigate, useSearchParams} from "react-router-dom";
 
 import {BASE_SERVER_URL} from '../ServerURL'
+import SideMenu from "./nav/SideMenu";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -47,9 +45,6 @@ function AddStationOnMap(props){
   //render states
   const [stateAddedNewMarker, setStateAddedNewMarker] = useState(false);
   const [stateNewMarkerConfirmed, setStateNewMarkerConfirmed] = useState(false);
-
-  //const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
-  //const BASE_SERVER_URL = "http://127.0.0.1:8080"
 
   const navigate = useNavigate();
 
@@ -224,7 +219,7 @@ function AddStationOnMap(props){
 
     for(let i=0; i<sizePrivateMarkers; i++){
       for(let j=0; j<sizeMarkers; j++){
-        if(stateMarkers[j]!=undefined && statePrivateMarkers[i]!=undefined){
+        if(stateMarkers[j]!==undefined && statePrivateMarkers[i]!==undefined){
         if(stateMarkers[j][2]===statePrivateMarkers[i][2]){
           let markersList = stateMarkers;
           markersList.splice(j, 1);
@@ -235,7 +230,7 @@ function AddStationOnMap(props){
 
     for(let i=0; i<sizeBookmarkMarkers; i++){
       for(let j=0; j<sizeMarkers; j++){
-        if(stateMarkers[j]!=undefined && stateBookmarkMarkers[i]!=undefined){
+        if(stateMarkers[j]!==undefined && stateBookmarkMarkers[i]!==undefined){
         if(stateMarkers[j][2]===stateBookmarkMarkers[i][2]){
           let markersList = stateMarkers;
           markersList.splice(j, 1);
@@ -340,7 +335,7 @@ const goldMarker = new L.Icon({
     <>
     <div style={{display: "flex", flexDirection: "column"}}>
     <div style={{display: "flex", flex:1}}>
-    <NavList/>
+      <SideMenu/>
     </div>
       <div className="d-flex p-2 col-example">
         <h3>Wybierz lokalizację swojej stacji pogodowej</h3>

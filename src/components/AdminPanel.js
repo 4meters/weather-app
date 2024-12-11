@@ -12,6 +12,8 @@ import SideMenu from "./nav/SideMenu";
 import Header from "./styling-components/Header";
 import {Button} from "react-bootstrap";
 
+import * as adminPanelApi from "../API/AdminPanelAPI";
+
 
 function AdminPanel(props) {
 
@@ -99,19 +101,19 @@ function AdminPanel(props) {
     }
 
     const handleStationModeButton = (event) => {
-        switchStationModeRequest(event.target.value)
+        adminPanelApi.switchStationModeRequest(event.target.value, stateToken, getStationList)
     }
 
     const handleChangeMeasureInterval = (measureInterval, stationId) => {
         console.log(measureInterval, stationId)
-        setMeasureIntervalRequest(measureInterval, stationId)
+        adminPanelApi.setMeasureIntervalRequest(measureInterval, stationId, stateToken, getStationList)
     }
 
     const handleRemoveStationButton = (stationId) => {
         console.log(stationId)
         let result = window.confirm("Czy na pewno usunąć z mapy stację o id: " + stationId + "?\nZostaną usunięte również wszystkie pomiary.\nStacja będzie mogła być aktywowana w przyszłości")
         if (result) {
-            removeStationRequest(stationId)
+            adminPanelApi.removeStationRequest(stationId, stateToken,getStationList)
         } else {
             alert("Stacja nie została usunięta")
         }
@@ -121,7 +123,7 @@ function AdminPanel(props) {
         console.log(stationId)
         let result = window.confirm("Czy na pewno usunąć z bazy danych stację o id: " + stationId + "?\nZostaną usunięte również wszystkie pomiary.\nStacja nie będzie mogła być aktywowana w przyszłości")
         if (result) {
-            removeStationFromDbRequest(stationId)
+            adminPanelApi.removeStationFromDbRequest(stationId, stateToken, getStationList)
         } else {
             alert("Stacja nie została usunięta z bazy danych")
         }
@@ -130,232 +132,37 @@ function AdminPanel(props) {
     const handleChangeVisibility = (visibility, stationId) => {
         console.log(visibility, stationId)
         if (visibility === "true") {
-            setVisibilityRequest(true, stationId)
+            adminPanelApi.setVisibilityRequest(true, stationId, stateToken, getStationList)
         } else {
-            setVisibilityRequest(false, stationId)
+            adminPanelApi.setVisibilityRequest(false, stationId, stateToken, getStationList)
         }
-    }
-
-    const switchStationModeRequest = (data) => {
-        data = JSON.parse(data)
-        const requestParams = {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                "token": stateToken,
-                "stationId": data['stationId'],
-                "mode": data['mode']
-            })
-        };
-        fetch(BASE_SERVER_URL + `/api/station/mode-switch`, requestParams)
-            .then(response => {
-                if (response.status === 200) {
-                    getStationList();
-                }
-            })
-    }
-
-    const removeStationRequest = (stationId) => {
-        //data=JSON.parse(data)
-        const requestParams = {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                "token": stateToken,
-                "stationId": stationId,
-                "removeMeasures": true
-            })
-        };
-        fetch(BASE_SERVER_URL + `/api/admin/remove-station`, requestParams)
-            .then(response => {
-                if (response.status === 200) {
-                    //getUserList();
-                    alert("Stacja pogodowa została usunięta")
-                    getStationList();
-                } else {
-                    throw new Error(response.status)
-                }
-            })
-            .catch((error) => {
-                console.log('error: ' + error)
-                alert("Nie udało się usunąć stacji pogodowej")
-            })
-
-    }
-
-    const removeStationFromDbRequest = (stationId) => {
-        //data=JSON.parse(data)
-        const requestParams = {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                "token": stateToken,
-                "stationId": stationId,
-                "removeMeasures": true
-            })
-        };
-        fetch(BASE_SERVER_URL + `/api/admin/remove-station-from-db`, requestParams)
-            .then(response => {
-                if (response.status === 200) {
-                    //getUserList();
-                    alert("Stacja pogodowa została usunięta z bazy danych")
-                    getStationList();
-                } else {
-                    throw new Error(response.status)
-                }
-            })
-            .catch((error) => {
-                console.log('error: ' + error)
-                alert("Nie udało się usunąć stacji pogodowej z bazy danych")
-            })
-
     }
 
     const handleResetUserPasswordButton = (userId, login) => {
         let result = window.confirm("Czy na pewno chcesz zresetować hasło do konta użytkownika o loginie: " + login)
         if (result) {
-            resetUserPasswordRequest(userId)
+            adminPanelApi.resetUserPasswordRequest(userId, stateToken)
         } else {
             alert("Hasło nie zostało zresetowane")
         }
     }
 
-    const resetUserPasswordRequest = (userId) => {
-        //data=JSON.parse(data)
-        const requestParams = {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                "token": stateToken,
-                "userId": userId
-            })
-        };
-        fetch(BASE_SERVER_URL + `/api/admin/reset-user-password`, requestParams)
-            .then(response => {
-                if (response.status === 200) {
-                    return response.json()
-                } else {
-                    throw new Error(response.status)
-                }
-            }).then((res) => {
-            alert('Hasło zostało zresetowane. Nowe hasło: ' + res['newPassword'])
-        })
-            .catch((error) => {
-                console.log('error: ' + error)
-                //here if 400, 403
-                alert("Nie udało się zresetować hasła użytkownika")
-            })
-
-    }
-
     const handleRemoveUserButton = (userId, login) => {
         let result = window.confirm("Czy na pewno chcesz usunąć konto użytkownika o loginie: " + login)
         if (result) {
-            removeUserAccountRequest(userId)
+            adminPanelApi.removeUserAccountRequest(userId, stateToken, ()=>{
+                getUserList();
+                getStationList();
+            })
         } else {
             alert("Konto nie zostało usunięte")
         }
-    }
-    const removeUserAccountRequest = (userId) => {
-
-        //data=JSON.parse(data)
-        const requestParams = {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                "token": stateToken,
-                "userId": userId
-            })
-        };
-        fetch(BASE_SERVER_URL + `/api/admin/remove-user`, requestParams)
-            .then(response => {
-                if (response.status === 200) {
-                    alert('Konto użytkownika zostało usunięte')
-                    getUserList();
-                    getStationList();
-                }
-
-            })
-            .catch((error) => {
-                console.log('error: ' + error)
-                //here if 400, 403
-                alert("Nie udało się usunąć konta użytkownika")
-            })
-
-    }
-
-    const addStationToDbRequest = (event) => {
-        event.preventDefault();
-        //data=JSON.parse(data)
-        const requestParams = {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                "token": stateToken,
-                "stationId": stateNewStationId,
-                "stationKey": stateNewStationKey
-            })
-        };
-        fetch(BASE_SERVER_URL + `/api/admin/add-station-to-db`, requestParams)
-            .then(response => {
-                if (response.status === 200) {
-                    setStateIsAddingNewStation(false);
-                    getUserList();
-                    getStationList();
-                } else {
-                    throw new Error(response.status)
-                }
-            })
-            .catch((error) => {
-                console.log('error: ' + error)
-                //here if 400, 403
-                alert("Nie udało dodać stacji do bazy danych")
-            })
-
     }
 
     const handleClickShowOnMap = (stationId) => {
         navigate("/?stationId=" + stationId)
     }
 
-
-    const setMeasureIntervalRequest = (measureInterval, stationId) => {
-        const requestParams = {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                "token": stateToken,
-                "stationId": stationId,
-                "measureInterval": measureInterval
-            })
-        };
-        fetch(BASE_SERVER_URL + `/api/station/set-measure-interval`, requestParams)
-            .then(response => {
-                if (response.status === 200) {
-                    getStationList();
-                }
-            })
-
-    }
-
-    const setVisibilityRequest = (visibility, stationId) => {
-        const requestParams = {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                "token": stateToken,
-                "stationId": stationId,
-                "visibility": visibility
-            })
-        };
-        fetch(BASE_SERVER_URL + `/api/station/set-visibility`, requestParams)
-            .then(response => {
-                if (response.status === 200) {
-                    getStationList();
-                }
-            })
-
-    }
 
     const handleSaveStationName = (newStationName, data) => {
         const requestParams = {
@@ -384,14 +191,10 @@ function AdminPanel(props) {
     const renderStationList = (stationlist) => {
         return (stationlist.map((data, idx) => {
             console.log(data)
-            let ref = null;
-            return (<div id={idx} key={idx} style={{
+            return (<div id={idx} className="mt8" key={idx} style={{
                 backgroundColor: '#DDDDDD'
             }}>
-                <div style={{
-                    backgroundColor: "#cccc",
-                    maxWidth: "400px"
-                }}>
+                <div className="admin-panel-station-list">
                     <h3><EdiText value={data['stationName']} onSave={(value) => handleSaveStationName(value, data)}/>
                     </h3>
                 </div>
@@ -402,9 +205,9 @@ function AdminPanel(props) {
 
                 <Flex style={{flexDirection: "column"}}>
                     <Flex style={{flexDirection: "row"}}>
-                        <p style={pStyle}><b style={{marginRight: "33px"}}>Widoczność:</b>
+                        <p className="flex-align-center" style={pStyle}><b style={{marginRight: "33px"}}>Widoczność:</b>
                             {data['visible'] != null ? <>
-                                <select name="visibility" id="visibility"
+                                <select className="form-select" name="visibility" id="visibility"
                                         onChange={(event) => handleChangeVisibility(event.target.value, data['stationId'])}
                                         value={data['visible']}>
                                     <option value="true">Publiczna</option>
@@ -413,9 +216,9 @@ function AdminPanel(props) {
                             </> : <></>}</p>
                     </Flex>
                     <Flex style={{flexDirection: "row"}}>
-                        <p style={pStyle}><b style={{marginRight: "10px"}}>Interwał pomiaru:</b>
+                        <p className="flex-align-center" style={pStyle}><b className="whitespace-nowrap" style={{marginRight: "10px"}}>Interwał pomiaru:</b>
                             {data['measureInterval'] != null && data['measureInterval'] !== "" ? <>
-                                <select name="measureInterval" id="measureInterval"
+                                <select className="form-select" name="measureInterval" id="measureInterval"
                                         onChange={(event) => handleChangeMeasureInterval(event.target.value, data['stationId'])}
                                         value={data['measureInterval']}>
                                     <option value="3min">3min</option>
@@ -439,28 +242,32 @@ function AdminPanel(props) {
 
                 <p/>
 
-                {data['lat'] != null && data['lng'] != null ? <>
-                    <button onClick={() => handleClickShowOnMap(data['stationId'])}>Pokaż na mapie</button>
-                </> : <></>
-                }
+                <div className="action-buttons">
 
-
-                {data['active'] != null && data['active'] !== "" ? <>
-                    {
-                        data['active'] ? <button value={'{"stationId":"' + data['stationId'] + '", "mode": "disable"}'}
-                                                 onClick={handleStationModeButton}>Wyłącz pomiary</button>
-                            : <button value={'{"stationId":"' + data['stationId'] + '", "mode": "enable"}'}
-                                      onClick={handleStationModeButton}>Włącz pomiary</button>
+                    {data['lat'] != null && data['lng'] != null ? <>
+                        <Button onClick={() => handleClickShowOnMap(data['stationId'])}>Pokaż na mapie</Button>
+                    </> : <></>
                     }
-                </> : <></>}
 
 
-                <button style={{backgroundColor: "red", color: "white", borderRadius: "6px"}}
-                        onClick={() => handleRemoveStationButton(data['stationId'])}>Usuń stację
-                </button>
-                <button style={{backgroundColor: "red", color: "white", borderRadius: "6px"}}
-                        onClick={() => handleRemoveStationFromDbButton(data['stationId'])}>Usuń stację z bazy danych
-                </button>
+                    {data['active'] != null && data['active'] !== "" ? <>
+                        {
+                            data['active'] ?
+                                <Button value={'{"stationId":"' + data['stationId'] + '", "mode": "disable"}'}
+                                        onClick={handleStationModeButton}>Wyłącz pomiary</Button>
+                                : <Button value={'{"stationId":"' + data['stationId'] + '", "mode": "enable"}'}
+                                          onClick={handleStationModeButton}>Włącz pomiary</Button>
+                        }
+                    </> : <></>}
+
+
+                    <Button variant="danger"
+                            onClick={() => handleRemoveStationButton(data['stationId'])}>Usuń stację
+                    </Button>
+                    <Button variant="danger"
+                            onClick={() => handleRemoveStationFromDbButton(data['stationId'])}>Usuń stację z bazy danych
+                    </Button>
+                </div>
             </div>)
         }))
     }
@@ -468,18 +275,19 @@ function AdminPanel(props) {
     const renderUserList = (userList) => {
         return (userList.map((data, idx) => {
             console.log(data)
-            return (<div key={idx} style={{
+            return (<div key={idx} className="mt8" style={{
                 backgroundColor: '#DDDDDD'
             }}>
-                <h3>{data['login']}</h3>
-                <p style={{fontSize: "9px", marginTop: "-10px", marginBottom: "-20px"}}>userId:</p>
+                {data['login'] && <h3>{data['login']}</h3>}
+                <p style={{fontSize: "9px", marginBottom: "-4px"}}>userId:</p>
                 <p>{data['userId']}</p>
 
-                <button onClick={() => handleResetUserPasswordButton(data['userId'], data['login'])}>Zresetuj hasło
-                </button>
-                <button style={{backgroundColor: "red", color: "white", borderRadius: "6px"}}
-                        onClick={() => handleRemoveUserButton(data['userId'], data['login'])}>Usuń konto
-                </button>
+                <div className="action-buttons">
+                    <Button onClick={() => handleResetUserPasswordButton(data['userId'], data['login'])}>Zresetuj hasło
+                    </Button>
+                    <Button variant="danger" onClick={() => handleRemoveUserButton(data['userId'], data['login'])}>Usuń konto
+                    </Button>
+                </div>
 
             </div>)
         }))
@@ -501,10 +309,11 @@ function AdminPanel(props) {
                             <Button onClick={handleClickLogin}>Strona logowania</Button>
                         </div>
                     </div>
-                    : <div className="StationList">
-                        <div className="my-stations">
+                    : <div>
+                        <div id="admin-panel">
 
-                            <Flex><h2>Stacje pogodowe</h2>
+                            <Flex className="admin-panel-header">
+                                <h2>Stacje pogodowe</h2>
                                 <Button onClick={() => {
                                     setStateIsAddingNewStation(true)
                                 }}>Dodaj stację do bazy danych
@@ -514,17 +323,22 @@ function AdminPanel(props) {
                             {stateIsAddingNewStation ? <>
                                 <h2>Nowa stacja</h2>
                                 <h3>Podaj dane stacji:</h3>
-                                <form onSubmit={addStationToDbRequest}>
+                                <form onSubmit={(e)=>
+                                    adminPanelApi.addStationToDbRequest(e, stateToken, stateNewStationKey, stateNewStationKey, ()=>{
+                                        setStateIsAddingNewStation(false);
+                                        getUserList();
+                                        getStationList();
+                                })}>
                                     <label>Id stacji:<p/>
-                                        <input type="text" value={stateNewStationId}
+                                        <input className="form-control" type="text" value={stateNewStationId}
                                                onChange={(event) => setStateNewStationId(event.target.value)}/>
                                     </label>
                                     <p/>
                                     <label>Klucz stacji:<p/>
-                                        <input type="text" value={stateNewStationKey}
+                                        <input className="form-control" type="text" value={stateNewStationKey}
                                                onChange={(event) => setStateNewStationKey(event.target.value)}/>
                                     </label><p/>
-                                    <input type="submit" value="Zapisz stację"/>
+                                    <input className="btn btn-primary" type="submit" value="Zapisz stację"/>
                                 </form>
                             </> : <></>}
 
@@ -535,7 +349,7 @@ function AdminPanel(props) {
                                 </>
                             }
                         </div>
-                        <div className="watched-stations">
+                        <div id="user-list" className="mt16">
                             <h2>Użytkownicy</h2>
                             {stateUserList.length > 0 ?
                                 <>{renderUserList(stateUserList)}</>

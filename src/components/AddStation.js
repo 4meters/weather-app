@@ -2,10 +2,11 @@ import React, { useState, useEffect} from "react";
 
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 import {useNavigate} from "react-router-dom";
-import {BASE_SERVER_URL} from '../ServerURL'
 import SideMenu from "./nav/SideMenu";
 import Header from "./styling-components/Header";
 import {Button} from "react-bootstrap";
+
+import * as addStationApi from '../API/AddStationAPI'
 
 function AddStation(props) {
 
@@ -14,9 +15,6 @@ function AddStation(props) {
   const [stateStationId,setStateStationId] = useState("");
   const [stateStationKey,setStateStationKey] = useState("");
   const navigate = useNavigate();
-
-  //const BASE_SERVER_URL = "http://localhost:8000"
-  //const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
 
 
   useEffect(() =>{
@@ -49,28 +47,17 @@ function AddStation(props) {
     setStateStationKey(event.target.value);
   }
 
-  const handleStationIdCheck = (event) => {
-    event.preventDefault();
+  const handleStationIdCheck = (e) => {
+    e.preventDefault();
     console.log(stateStationId)
-    const requestParams = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        "stationId" : stateStationId,
-        "stationKey" : stateStationKey,
-        "token": stateToken
+    addStationApi.stationIdCheckRequest(stateStationId, stateStationKey, stateToken, (res)=>{
+      if(res.status === 200){
+        navigate(`/add-station-on-map?stationId=${stateStationId}&stationKey=${stateStationKey}`)
+      }
+      else{
+        alert("Podano niepoprawne id stacji lub klucz, lub stacja jest już dodana na mapę")
+      }
     })
-    };
-
-    fetch(BASE_SERVER_URL+`/api/station/verify-station`, requestParams)
-        .then(response => {
-            if(response.status === 200){
-              navigate("/add-station-on-map?stationId="+stateStationId)
-            }
-            else{
-              alert("Podano niepoprawne id stacji lub klucz")
-            }            
-        })
   }
 
 

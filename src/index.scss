@@ -58,3 +58,12 @@ button[editext='edit-button'] {
   -webkit-transform: scaleX(-1);
   transform: scaleX(-1);
 }
+
+.admin-panel-header {
+  max-width: 620px;
+  justify-content: space-between;
+}
+
+.admin-panel-station-list {
+  max-width: 620px;
+}

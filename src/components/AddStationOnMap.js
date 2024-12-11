@@ -6,8 +6,10 @@ import L from 'leaflet';
 
 import {useNavigate, useSearchParams} from "react-router-dom";
 
-import {BASE_SERVER_URL} from '../ServerURL'
 import SideMenu from "./nav/SideMenu";
+import * as addStationApi from "../API/AddStationAPI"
+import * as mapApi from "../API/MapAPI"
+import {Button} from "react-bootstrap";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -18,14 +20,12 @@ L.Icon.Default.mergeOptions({
 });
 
 
-const mapStyle = { height: "90vh" };
+const mapStyle = { height: "89vh" };
 
 let position = [50.068, 21.255]
 
-
-
 function AddStationOnMap(props){
-  
+
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [stateNewStationVisibility, setStateNewStationVisibility] = useState(true);
@@ -82,10 +82,12 @@ function AddStationOnMap(props){
   },[stateIsLoggedIn])
 
   const saveMarker = (newMarkerCoords) => {
-    console.log(newMarkerCoords)
-    setStateNewMarker(newMarkerCoords);
-    setStateAddedNewMarker(true);
-    console.log(stateNewMarker);
+   if(!stateNewMarkerConfirmed) {
+      console.log(newMarkerCoords)
+      setStateNewMarker(newMarkerCoords);
+      setStateAddedNewMarker(true);
+      console.log(stateNewMarker);
+    }
 };
 
   function MyComponent({saveMarker}) {
@@ -93,9 +95,8 @@ function AddStationOnMap(props){
       click: (event) => {
 
         const { lat, lng } = event.latlng;
-        console.log(lng)
         saveMarker([lat,lng])
-        
+
       },
       locationfound: (location) => {
         console.log('location found:', location)
@@ -109,71 +110,48 @@ function AddStationOnMap(props){
     setStateNewMarkerConfirmed(true);
   }
 
-  const handleAddStationFinalRequest = event => {
-    event.preventDefault();
-    const requestParams = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        "token": stateToken,
-        "stationId" : searchParams.get('stationId'),
-        "lat" : stateNewMarker[0],
-        "lng" : stateNewMarker[1],
-        "stationName" : stateNewStationName,
-        "visible" : stateNewStationVisibility
-    })
-    };
-
-    fetch(BASE_SERVER_URL+`/api/station/add-station-on-map`, requestParams)
-        .then(response => {
-            if(response.status===200){
-              alert("Stacja została dodana na mapę")
-              navigate("/")
-            }
-            else{
-              alert("Nie udało się dodać stacji na mapę")
-            }
+  const handleAddStationFinalRequest = e => {
+    e.preventDefault();
+    addStationApi.addStationFinalRequest(stateToken, searchParams.get('stationId'), searchParams.get('stationKey'),
+        stateNewMarker, stateNewStationName, stateNewStationVisibility, (res) => {
+          if (res.status === 200) {
+            alert("Stacja została dodana na mapę")
+            navigate("/")
+          } else {
+            alert("Nie udało się dodać stacji na mapę")
+          }
         })
   }
 
   const handleChangeNewStationName = event =>{
     setStateNewStationName(event.target.value);
   }
-  
+
 
   const refreshMarkers = () => {
-      fetch(BASE_SERVER_URL+`/api/station/get-public-stationlist`)
-          .then(res => res.json())
-          .then(stationList => {
-            let stateStationList=stationList;
-            setStateStationList(stationList);
-            
-            let markers = [];
+    mapApi.fetchPublicStationList((stationList)=>{
+      let stateStationList=stationList;
+      setStateStationList(stationList);
 
-            console.log(stateStationList);
+      let markers = [];
 
-            let size = stateStationList['stationList'].length;
-            for(var i = 0; i < size ; i++){
-              let item = stateStationList['stationList'][i];
-              var markerPosition=[item['lat'], item['lng'], item['stationId']];
-              markers.push(markerPosition);
-            }
-            console.log(stateStationList);
-            console.log(markers);
-            //setStateStationList(stationList);
-            setStateMarkers(markers);
-          
-                  
-      });
-                
-              
-          
+      console.log(stateStationList);
+
+      let size = stateStationList['stationList'].length;
+      for(var i = 0; i < size ; i++){
+        let item = stateStationList['stationList'][i];
+        var markerPosition=[item['lat'], item['lng'], item['stationId']];
+        markers.push(markerPosition);
+      }
+      console.log(stateStationList);
+      console.log(markers);
+      //setStateStationList(stationList);
+      setStateMarkers(markers);
+    })
   }
 
   const refreshPrivateMarkers = () =>{
-    fetch(BASE_SERVER_URL+`/api/user/get-user-mystationlist-details/`+stateToken)
-    .then(res => res.json())
-    .then(response => {
+    mapApi.fetchPrivateMarkers(stateToken, (response)=>{
       let stationList=response['stationList']
       let measureList=response['measureList']
 
@@ -187,13 +165,10 @@ function AddStationOnMap(props){
       }
       setStatePrivateMarkers(privateMarkers);
     })
-
   }
 
   const refreshBookmarkMarkers = () =>{
-    fetch(BASE_SERVER_URL+`/api/user/get-user-bookmarkstationlist-details/`+stateToken)
-    .then(res => res.json())
-    .then(response => {
+    mapApi.fetchBookmarkMarkers(stateToken, (response)=>{
       let stationList=response['stationList']
       let measureList=response['measureList']
 
@@ -234,7 +209,7 @@ function AddStationOnMap(props){
         if(stateMarkers[j][2]===stateBookmarkMarkers[i][2]){
           let markersList = stateMarkers;
           markersList.splice(j, 1);
-          
+
           setStateMarkers(markersList)
         }}
       }
@@ -242,53 +217,58 @@ function AddStationOnMap(props){
 
     console.log("Markerlist after deduplicate: "+markersList);
   }
-  
+
 
   const renderMarkersList = (markers) =>{
   deDuplicateStations();
   return (markers.map((data, idx) => {
 
-    return (
-      <Marker key={`marker-${idx}`} position={[data[0], data[1]]}>
+    if(data[0] && data[1]) {
+      return (
+          <Marker key={`marker-${idx}`} position={[data[0], data[1]]}>
             <Popup>
               <p>Id stacji: {data[2]} </p>
               <p>N: {data[0]}</p>
               <p>E: {data[1]}</p>
             </Popup>
           </Marker>
-    )
+      )
+    }
     }))
   }
 
   const renderPrivateMarkersList = (markers) =>{
   deDuplicateStations();
     return (markers.map((data, idx) => {
-    
-      return (
-        <Marker icon={greenMarker} key={`marker-${idx}`} position={[data[0], data[1]]}>
+      if(data[0] && data[1]) {
+        return (
+            <Marker icon={greenMarker} key={`marker-${idx}`} position={[data[0], data[1]]}>
               <Popup>
                 <p>Id stacji: {data[2]} </p>
                 <p>N: {data[0]}</p>
                 <p>E: {data[1]}</p>
               </Popup>
             </Marker>
-      )
+        )
+      }
       }))
   }
 
   const renderBookmarkMarkersList = (markers) =>{
   deDuplicateStations();
     return (markers.map((data, idx) => {
-    
-      return (
-        <Marker icon={goldMarker} key={`marker-${idx}`} position={[data[0], data[1]]}>
+
+      if(data[0] && data[1]) {
+        return (
+            <Marker icon={goldMarker} key={`marker-${idx}`} position={[data[0], data[1]]}>
               <Popup>
                 <p>Id stacji: {data[2]} </p>
                 <p>N: {data[0]}</p>
                 <p>E: {data[1]}</p>
               </Popup>
             </Marker>
-      )
+        )
+      }
       }))
   }
 
@@ -301,7 +281,7 @@ const onChangeRadioButtonsVisibility = event =>{
   else{
     setStateNewStationVisibility(false)
   }
-  
+
 }
 
 const violetMarker = new L.Icon({
@@ -337,7 +317,7 @@ const goldMarker = new L.Icon({
     <div style={{display: "flex", flex:1}}>
       <SideMenu/>
     </div>
-      <div className="d-flex p-2 col-example">
+      <div className="p-2">
         <h3>Wybierz lokalizację swojej stacji pogodowej</h3>
         <MapContainer center={position} zoom={10} style={mapStyle} maxZoom={18} zoomControl={false}>
           <MyComponent saveMarker={saveMarker}/>
@@ -354,48 +334,50 @@ const goldMarker = new L.Icon({
             <h3>Lokalizacja nowej stacji:</h3>
             <p style={{marginBottom: "-20px"}}>N: {position[0]}</p>
             <p>E: {position[1]}</p>
-            {!stateNewMarkerConfirmed ? <button onClick={confirmNewMarker}>Potwierdź lokalizację</button> : <></>}
+            {!stateNewMarkerConfirmed ? <Button onClick={confirmNewMarker}>Potwierdź lokalizację</Button> : <></>}
             <div>
               {stateNewMarkerConfirmed ?
-              
+
             <div>
               <form onSubmit={handleAddStationFinalRequest}>
                 <label><b>Podaj nazwę stacji:</b><p style={{marginTop: "-10px"}}/>
-                  <input type="text" value={stateNewStationName} onChange={handleChangeNewStationName} />
+                  <input className="form-control" type="text" value={stateNewStationName} onChange={handleChangeNewStationName} />
                 </label>
                 <p style={{marginBottom: "0px"}}><b>Widoczność:</b></p>
 
 
 
-                <div className="radio">
-                  <label>
-                    <input
-                      type="radio"
-                      value="public"
-                      checked={stateNewStationVisibility === true}
-                      onChange={onChangeRadioButtonsVisibility}
-                    />
+                <div className="form-check">
+                  <input
+                    className="form-check-input align-middle"
+                    type="radio"
+                    value="public"
+                    checked={stateNewStationVisibility === true}
+                    onChange={onChangeRadioButtonsVisibility}
+                  />
+                  <label className="form-check-label">
                     Publiczna
                   </label>
                 </div>
-                <div className="radio">
-                  <label>
-                    <input
-                      type="radio"
-                      value="private"
-                      checked={stateNewStationVisibility === false}
-                      onChange={onChangeRadioButtonsVisibility}
-                    />
+                <div className="form-check">
+                  <input
+                    className="form-check-input align-middle"
+                    type="radio"
+                    value="private"
+                    checked={stateNewStationVisibility === false}
+                    onChange={onChangeRadioButtonsVisibility}
+                  />
+                  <label className="form-check-label">
                     Prywatna
                   </label>
                 </div>
-                <input style={{marginTop:"10px"}} type="submit" value="Potwierdź" />
+                <input className="btn btn-primary" style={{marginTop:"10px"}} type="submit" value="Potwierdź" />
               </form>
               </div> : <></>}</div>
           </Popup>
         </Marker> : <></>
         }
-        
+
         <ZoomControl position="bottomright"/>
       </MapContainer>
       </div>

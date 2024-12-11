@@ -6,11 +6,7 @@ import DateTimePicker from 'react-datetime-picker';
 import {format, differenceInHours, startOfMonth,
   startOfWeek, startOfDay, endOfDay, sub} from 'date-fns';
 
-import {BASE_SERVER_URL} from '../ServerURL'
-
-
-//const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
-//const BASE_SERVER_URL = "http://127.0.0.1:8080"
+import {getMeasureListRequest} from "../API/ArchivalDataAPI";
 
 export default class Chart extends PureComponent {
   constructor(props){
@@ -155,34 +151,27 @@ export default class Chart extends PureComponent {
   }
 
   getMeasureList = () => {
-      const requestParams = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          "token" : localStorage.getItem("token"),
-          "stationId": this.state.stationId,
-          "dateFrom" : this.state.dateStart.toISOString(),
-          "dateTo" : this.state.dateEnd.toISOString(),
-          "timezone": format(new Date, 'xxx'),
-          "chartType": this.state.chartType,
-          "chartValue": this.state.chartValue
+    getMeasureListRequest({data: {
+      "token" : localStorage.getItem("token"),
+      "stationId": this.state.stationId,
+      "dateFrom" : this.state.dateStart.toISOString(),
+      "dateTo" : this.state.dateEnd.toISOString(),
+      "timezone": format(new Date, 'xxx'),
+      "chartType": this.state.chartType,
+      "chartValue": this.state.chartValue
+    }}, (res)=>{
+      let measuresList = res
+      measuresList=measuresList['chartDtoList'];
+        this.setState({
+          ...this.state,
+          measuresList
+        });
       })
-      };
- 
-      fetch(BASE_SERVER_URL+`/api/measure/measure-by-date-chart`, requestParams)
-          .then(res => res.json())
-          .then(measuresList => {
-              measuresList=measuresList['chartDtoList'];
-              this.setState({
-                ...this.state,
-                measuresList
-            });
-          })
   }
 
 
   render() {
-    let legend ={"temp": "Temperatura",
+    let chartLegend ={"temp": "Temperatura",
     "humidity": "Wilgotność",
     "pressure": "Ciśnienie powietrza",
     "pm25": "PM2.5",
@@ -244,7 +233,7 @@ export default class Chart extends PureComponent {
           <CartesianGrid strokeDasharray="3 3" />
           <Tooltip formatter={(value, name) => value + this.state.chartYAxisUnit}/>
           <Legend />
-          <Area name={legend[this.state.chartValue]} type="monotone" dataKey={this.state.chartValue} stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
+          <Area name={chartLegend[this.state.chartValue]} type="monotone" dataKey={this.state.chartValue} stroke="#8884d8" fillOpacity={1} fill="url(#colorUv)" />
         </AreaChart>
       </div>
       <div>
@@ -270,7 +259,7 @@ export default class Chart extends PureComponent {
            </>}
            <Tooltip formatter={(value, name) => value + this.state.chartYAxisUnit}/>
           <Legend />
-          <Line name={legend[this.state.chartValue]} type="monotone" dataKey={this.state.chartValue} stroke="#8884d8" activeDot={{ r: 4 }} />
+          <Line name={chartLegend[this.state.chartValue]} type="monotone" dataKey={this.state.chartValue} stroke="#8884d8" activeDot={{ r: 4 }} />
         </LineChart>
       </div>
       </>

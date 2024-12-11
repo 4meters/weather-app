@@ -3,10 +3,10 @@ import { useNavigate } from "react-router";
 
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 
-import {BASE_SERVER_URL} from '../ServerURL'
 import SideMenu from "./nav/SideMenu";
 import Header from "./styling-components/Header";
 import {Button} from "react-bootstrap";
+import {registerUserRequest} from '../API/LoginAPI'
 
 function Register(props) {
 
@@ -39,31 +39,19 @@ function Register(props) {
     setStatePassword(event.target.value);
   }
 
-  const handleRegisterUser = event => {
-    event.preventDefault();
+  const handleRegisterUser = e => {
+    e.preventDefault();
     if(validateLoginData()){
-      const requestParams = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          "login" : stateLogin,
-          "password" : statePassword
+      registerUserRequest(stateLogin, statePassword, (res)=>{
+        if(res.status===201){
+          setStateIsRegistered(true);
+          setStateIsFailedRegister(false);
+        }
+        else{
+          setStateIsFailedRegister(true);
+          setStateIsRegistered(false);
+        }
       })
-      };
-
-      fetch(BASE_SERVER_URL+`/api/user/register`, requestParams)
-          .then(response => {
-              if(response.status===201){
-                setStateIsRegistered(true);
-                setStateIsFailedRegister(false);
-                console.log("201")
-              }
-              else{
-                setStateIsFailedRegister(true);
-                setStateIsRegistered(false);
-              }
-              
-          })
     }
     else{
       alert("Wymagana długość loginu to 3 znaki, hasła 8 znaków")

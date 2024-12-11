@@ -6,11 +6,10 @@ import Flex from '@react-css/flex'
 
 import EdiText from 'react-editext';
 
-import {BASE_SERVER_URL} from '../ServerURL'
 import SideMenu from "./nav/SideMenu";
 import Header from "./styling-components/Header";
 import {Button} from "react-bootstrap";
- 
+import * as userStationListApi from '../API/UserStationListApi'
 
 function UserStationList(props) {
 
@@ -52,19 +51,12 @@ function UserStationList(props) {
     
   },[stateToken])
 
-  
 
   const getUserStationList = () => {
-    //TODO add status check
-    //TODO empty list catch
-    //fetch(`http://127.0.0.1:8080/api/user/get-user-stationlist/`+stateToken)
-    fetch(BASE_SERVER_URL+`/api/user/get-user-stationlist/`+stateToken)
-        .then(res => res.json())
-        .then(response => {
-            setStateMyStationList(response['myStationList'])
-            setStateBookmarkStationList(response['bookmarkStationList'])
-            //console.log(response)
-        })
+    userStationListApi.getUserStationListRequest(stateToken, (response) => {
+      setStateMyStationList(response['myStationList'])
+      setStateBookmarkStationList(response['bookmarkStationList'])
+    })
   }
 
 
@@ -80,7 +72,15 @@ function UserStationList(props) {
     let result = window.confirm("Czy na pewno chcesz usunąć stację pogodową?\nWszystkie wyniki pomiarów zostaną również usunięte.")
     console.log(stationId)
     if(result){
-      removeStationRequest(stationId)
+      userStationListApi.removeStationRequest(stationId, stateToken, (res)=>{
+        if(res.status===200){
+          alert("Stacja pogodowa została usunięta")
+          getUserStationList();
+        }
+        else{
+          alert("Nie udało się usunąć stacji pogodowej z bazy danych")
+        }
+      })
     }
     else{
       alert("Stacja pogodowa nie została usunięta")
@@ -88,123 +88,43 @@ function UserStationList(props) {
   }
 
   const handleStationModeButton=(event) =>{
-    switchStationModeRequest(event.target.value)
+    userStationListApi.switchStationModeRequest(event.target.value, stateToken, (res)=>{
+      if(res.status===200){
+        getUserStationList();
+      }
+    })
   }
 
   const handleChangeMeasureInterval = (measureInterval, stationId) =>{
     console.log(measureInterval, stationId)
-    setMeasureIntervalRequest(measureInterval, stationId)
+    userStationListApi.setMeasureIntervalRequest(stateToken, measureInterval, stationId, (res)=>{
+      if(res.status===200){
+        getUserStationList();
+      }
+    })
   }
 
   const handleChangeVisibility = (visibility, stationId) =>{
     console.log(visibility, stationId)
     if(visibility==="true"){
-      setVisibilityRequest(true, stationId)
+      userStationListApi.setVisibilityRequest(stateToken, true, stationId, (res)=>{
+        if(res.status===200){
+          getUserStationList();
+        }
+      })
     }
     else{
-      setVisibilityRequest(false, stationId)
+      userStationListApi.setVisibilityRequest(stateToken, false, stationId, (res)=>{
+        if(res.status===200){
+          getUserStationList();
+        }
+      })
     }
-  }
-
-  const removeStationRequest=(stationId)=>{
-    //data=JSON.parse(data)
-    const requestParams = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        "token": stateToken,
-        "stationId" : stationId,
-        "removeMeasures": true
-    })
-    };
-    fetch(BASE_SERVER_URL+`/api/station/remove-station`,requestParams)
-    .then(response => {
-      if(response.status===200){
-        alert("Stacja pogodowa została usunięta")
-        getUserStationList();
-      }
-      else{
-        throw new Error(response.status)
-      }
-    })
-    .catch((error)=>{
-      console.log('error: '+error)
-      alert("Nie udało się usunąć stacji pogodowej z bazy danych")
-    })
-
-  }
-
-  const switchStationModeRequest=(data)=>{
-    data=JSON.parse(data)
-    const requestParams = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        "token": stateToken,
-        "stationId" : data['stationId'],
-        "mode": data['mode']
-    })
-    };
-    fetch(BASE_SERVER_URL+`/api/station/mode-switch`,requestParams)
-    .then(response => {
-      if(response.status===200){
-        getUserStationList();
-      }
-    })
-
-  }
-
-  const setMeasureIntervalRequest=(measureInterval, stationId)=>{
-    const requestParams = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        "token": stateToken,
-        "stationId" : stationId,
-        "measureInterval": measureInterval
-    })
-    };
-    fetch(BASE_SERVER_URL+`/api/station/set-measure-interval`,requestParams)
-    .then(response => {
-      if(response.status===200){
-        getUserStationList();
-      }
-    })
-
-  }
-
-  const setVisibilityRequest=(visibility, stationId)=>{
-    const requestParams = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        "token": stateToken,
-        "stationId" : stationId,
-        "visibility": visibility
-    })
-    };
-    fetch(BASE_SERVER_URL+`/api/station/set-visibility`,requestParams)
-    .then(response => {
-      if(response.status===200){
-        getUserStationList();
-      }
-    })
-
   }
 
   const handleSaveStationName = (newStationName, data) =>{
-    const requestParams = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        "token": stateToken,
-        "stationId" : data['stationId'],
-        "newStationName": newStationName
-    })
-    };
-    fetch(BASE_SERVER_URL+`/api/station/change-station-name`,requestParams)
-    .then(response => {
-      if(response.status===200){
+    userStationListApi.saveStationNameRequest(stateToken, newStationName, data, (res)=>{
+      if(res.status===200){
         getUserStationList();
       }
     })

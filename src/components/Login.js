@@ -3,10 +3,10 @@ import { useNavigate } from "react-router";
 
 import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
 
-import {BASE_SERVER_URL} from '../ServerURL'
 import SideMenu from "./nav/SideMenu";
 import Header from "./styling-components/Header";
 import {Button} from "react-bootstrap";
+import * as loginApi from '../API/LoginAPI'
 
 function Login(props) {
 
@@ -74,101 +74,57 @@ function Login(props) {
     setStateNewPassword(event.target.value);
   }
 
-  const handleLoginUser = event => {
-    event.preventDefault();
-    if(validateLoginData()){
-      const requestParams = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          "login" : stateLogin,
-          "password" : statePassword
+  const handleLoginUser = e => {
+    e.preventDefault();
+    if (validateLoginData()) {
+      loginApi.loginUserRequest(stateLogin, statePassword, (response)=>{
+        console.log(response)
+        console.log(response['token']);
+        let token = response['token']
+        setStateToken(token);
+        setStateIsLoggedIn(true);
+        localStorage.setItem('login', stateLogin);
+        localStorage.setItem('token', token);
       })
-      };
+    } else {
+      alert("Pole login i hasło nie mogą być puste")
+    }
+  }
 
-      fetch(BASE_SERVER_URL+`/api/user/login`, requestParams)
-          .then(response => {
-            if(response.status===201){
-              return response.json()
-            }
-            else{
-              throw new Error(response.status)
-            }
-          }).then((response)=>{
-            console.log(response['token']);
-              let token = response['token']
-              setStateToken(token);
-              setStateIsLoggedIn(true);
-              localStorage.setItem('login', stateLogin);
-              localStorage.setItem('token', token);
-          })
-          .catch((error)=>{
-            console.log('error: '+error)
-            alert("Błędny login lub hasło")
-          })
+  const handlePasswordChange = e =>{
+    e.preventDefault();
+    loginApi.changePasswordRequest(stateOldPassword, stateNewPassword, stateToken, (res)=>{
+      console.log(res.status)
+      if(res.status === 201){
+        setStateIsOnPasswordChange(false);
+        alert("Hasło zostało zmienione")
       }
       else{
-        alert("Pole login i hasło nie mogą być puste")
+        setStateIsOnPasswordChange(false);
+        alert("Nie udało się zmienić hasła")
       }
+    })
   }
 
-  const handleChangePasswordRequest = event =>{
-    event.preventDefault();
-    const requestParams = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        "oldPassword" : stateOldPassword,
-        "newPassword" : stateNewPassword,
-        "token": stateToken
+  const handleRemoveUser = e =>{
+    e.preventDefault();
+    loginApi.removeUserRequest(statePassword, stateToken, (res)=>{
+      console.log(res.status.toString())
+      if(res.status === 200){
+        setStateIsOnRemovingAccount(false);
+        setStateToken("");
+        setStateIsLoggedIn(false);
+        setStateLogin("");
+        setStatePassword("");
+        localStorage.setItem("login","")
+        localStorage.setItem("token","");
+        alert("Konto zostało usunięte")
+      }
+      else{
+        setStateIsOnRemovingAccount(false);
+        alert("Nie udało się usunąć konta")
+      }
     })
-    };
-
-    fetch(BASE_SERVER_URL+`/api/user/change-password`, requestParams)
-        .then(res => {
-          console.log(res.status)
-            if(res.status === 201){
-              setStateIsOnPasswordChange(false);
-              alert("Hasło zostało zmienione")
-            }
-            else{
-              setStateIsOnPasswordChange(false);              
-              alert("Nie udało się zmienić hasła")
-            }
-            
-        })
-  }
-
-  const handleRemoveUserRequest = event =>{
-    event.preventDefault();
-    const requestParams = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        "password" : statePassword,
-        "token": stateToken
-    })
-    };
-
-    fetch(BASE_SERVER_URL+`/api/user/remove-user`, requestParams)
-        .then(res => {
-          console.log(res.status)
-            if(res.status === 200){
-              setStateIsOnRemovingAccount(false);
-              setStateToken("");
-              setStateIsLoggedIn(false);
-              setStateLogin("");
-              setStatePassword("");
-              localStorage.setItem("login","")
-              localStorage.setItem("token","");
-              alert("Konto zostało usunięte")
-            }
-            else{
-              setStateIsOnRemovingAccount(false);              
-              alert("Nie udało się usunąć konta")
-            }
-            
-        })
   }
 
   const handleClickLogout = () =>{
@@ -193,10 +149,10 @@ function Login(props) {
     setStateIsOnPasswordChange(false);
   }
 
-  const handleRemoveUserSecondStage = (event) =>{
+  const handleRemoveUserSecondStage = (e) =>{
     let result = window.confirm("Czy na pewno chcesz usunąć swoje konto?");
     if(result){
-      handleRemoveUserRequest(event);
+      handleRemoveUser(e);
     }
     else{
       setStateIsOnRemovingAccount(false);
@@ -241,7 +197,7 @@ function Login(props) {
                         <Button className="mt8" onClick={handleClickChangePassword}>Zmień hasło</Button>
                       </>
                       : <>
-                        <form onSubmit={handleChangePasswordRequest}>
+                        <form onSubmit={handlePasswordChange}>
                           <label>Stare hasło:<p/>
                             <input type="password" value={stateOldPassword} onChange={handleChangeOldPassword}/>
                           </label>

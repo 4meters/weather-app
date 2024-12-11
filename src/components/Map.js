@@ -17,10 +17,9 @@ import {BsBookmarkDashFill, BsBookmarkPlus} from "react-icons/bs";
 
 import Flex from '@react-css/flex'
 
-import {BASE_SERVER_URL} from '../ServerURL'
-
 import SideMenu from "./nav/SideMenu";
 import {Button} from "react-bootstrap";
+import * as mapApi from "../API/MapAPI"
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -32,9 +31,6 @@ L.Icon.Default.mergeOptions({
 
 
 const mapStyle = { height: "90vh" };
-
-//const BASE_SERVER_URL = "https://weather-serverapplication.herokuapp.com"
-//const BASE_SERVER_URL = "http://127.0.0.1:8080"
 
 
 let position = [50.068, 21.255]
@@ -211,76 +207,61 @@ function Map(props){
   }
 
   const refreshMarkers = () => {
-      fetch(BASE_SERVER_URL+`/api/station/get-public-stationlist`)
-          .then(res => res.json())
-          .then(stationList => {
-            let stateStationList=stationList;
-            setStateStationList(stationList);
-            fetch(BASE_SERVER_URL+`/api/measure/last-measure-all`)
-            .then(res => res.json())
-            .then(response => {
-  
-              let markers = [];
-              let measureList=response['measureList'];
-              setStateStationLastMeasure(response['measureList']);
-              //console.log(stateStationLastMeasure);
-              //console.log(stateStationList);
-  
-  
-              let size = stateStationList['stationList'].length;
-              for(var i = 0; i < size ; i++){
-                let item = stateStationList['stationList'][i];
-                var markerPosition=[item['lat'], item['lng'], item['stationId'], measureList[item['stationId']], item['stationName']];
-                markers.push(markerPosition);
-              }
-              //console.log(stateStationList);
-              //console.log(markers);
-              //setStateStationList(stationList);
-              setStateMarkers(markers);
-              //console.log(response)
-          })
-          
-                  
-      });
-                
-              
-          
+    mapApi.fetchMarkers((response) => {
+      let stateStationList = response;
+      setStateStationList(response);
+      mapApi.fetchLastMeasures((response)=>{
+        let markers = [];
+        let measureList = response['measureList'];
+        setStateStationLastMeasure(response['measureList']);
+        //console.log(stateStationLastMeasure);
+        //console.log(stateStationList);
+
+
+        let size = stateStationList['stationList'].length;
+        for (let i = 0; i < size; i++) {
+          let item = stateStationList['stationList'][i];
+          let markerPosition = [item['lat'], item['lng'], item['stationId'], measureList[item['stationId']], item['stationName']];
+          markers.push(markerPosition);
+        }
+        //console.log(stateStationList);
+        //console.log(markers);
+        //setStateStationList(stationList);
+        setStateMarkers(markers);
+        //console.log(response)
+      })
+    })
   }
-  
-  
-  const refreshPrivateMarkers = () =>{
-    fetch(BASE_SERVER_URL+`/api/user/get-user-mystationlist-details/`+stateToken)
-    .then(res => res.json())
-    .then(response => {
-      let stationList=response['stationList']
-      let measureList=response['measureList']
+
+
+  const refreshPrivateMarkers = () => {
+    mapApi.fetchPrivateMarkers(stateToken, (response) => {
+      let stationList = response['stationList']
+      let measureList = response['measureList']
 
       let privateMarkers = [];
 
       let size = stationList.length;
-      for(var i = 0; i < size ; i++){
+      for (var i = 0; i < size; i++) {
         let item = stationList[i];
-        var markerPosition=[item['lat'], item['lng'], item['stationId'], measureList[item['stationId']], item['stationName']];
+        var markerPosition = [item['lat'], item['lng'], item['stationId'], measureList[item['stationId']], item['stationName']];
         privateMarkers.push(markerPosition);
       }
       setStatePrivateMarkers(privateMarkers);
     })
-
   }
 
-  const refreshBookmarkMarkers = () =>{
-    fetch(BASE_SERVER_URL+`/api/user/get-user-bookmarkstationlist-details/`+stateToken)
-    .then(res => res.json())
-    .then(response => {
-      let stationList=response['stationList']
-      let measureList=response['measureList']
+  const refreshBookmarkMarkers = () => {
+    mapApi.fetchBookmarkMarkers(stateToken, (response) => {
+      let stationList = response['stationList']
+      let measureList = response['measureList']
 
       let bookmarkMarkers = [];
 
       let size = stationList.length;
-      for(var i = 0; i < size ; i++){
+      for (var i = 0; i < size; i++) {
         let item = stationList[i];
-        var markerPosition=[item['lat'], item['lng'], item['stationId'], measureList[item['stationId']], item['stationName']];
+        var markerPosition = [item['lat'], item['lng'], item['stationId'], measureList[item['stationId']], item['stationName']];
         bookmarkMarkers.push(markerPosition);
       }
       setStateBookmarkMarkers(bookmarkMarkers);
@@ -288,26 +269,15 @@ function Map(props){
   }
 
 
-  const getUserStationList = event => {
-    fetch(BASE_SERVER_URL+`/api/user/get-user-stationlist/`+stateToken)
-        .then(res => res.json())
-        .then(response => {
-            setStateMyStationList(response['myStationList'])
-            setStateBookmarkStationList(response['bookmarkStationList'])
-        })
+  const getUserStationList = () => {
+    mapApi.fetchUserStationList(stateToken, (response) => {
+      setStateMyStationList(response['myStationList'])
+      setStateBookmarkStationList(response['bookmarkStationList'])
+    })
   }
           
   const bookmarkRequest=(stationId, operation)=>{
-    const requestParams = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        "token": stateToken,
-        "stationId" : stationId
-    })
-    };
-    fetch(BASE_SERVER_URL+`/api/user/`+operation+`-bookmark`,requestParams)
-    .then(response => {
+    mapApi.bookmarkRequest(stateToken, stationId, operation, (response)=>{
       if(response.status===200){
         refreshMarkers();
         refreshPrivateMarkers();
@@ -315,7 +285,6 @@ function Map(props){
         getUserStationList();
       }
     })
-
   }
 
 
@@ -414,72 +383,74 @@ function Map(props){
       else{
         ref1=null;
       }
-      return (
-          <Marker ref={ref1} key={`marker-${idx}`} position={[data[0], data[1]]}>
-            <Popup>
-              <Flex justifySpaceBetween style={{marginTop: "-4px", paddingRight: "10px"}}>
-                <h5 style={{marginBottom: "10px"}}>{data[4]}</h5>
-                {stateIsLoggedIn ?
-                    <>
-                      {checkBookmark(data[2]) ?
-                          <div>
-                            <Button size="sm" variant="secondary" className="no-padding" value={data[2]} onClick={() => handleBookmarkButtonClick(data[2], "remove")}>
-                              <BsBookmarkDashFill/></Button>
-                          </div>
-                          : <div>
-                            <Button size="sm" variant="secondary" className="no-padding" value={data[2]} onClick={() => handleBookmarkButtonClick(data[2], "add")}>
-                              <BsBookmarkPlus/></Button>
-                          </div>}
+      if(data[0] && data[1]) {
+        return (
+            <Marker ref={ref1} key={`marker-${idx}`} position={[data[0], data[1]]}>
+              <Popup>
+                <Flex justifySpaceBetween style={{marginTop: "-4px", paddingRight: "10px"}}>
+                  <h5 style={{marginBottom: "10px"}}>{data[4]}</h5>
+                  {stateIsLoggedIn ?
+                      <>
+                        {checkBookmark(data[2]) ?
+                            <div>
+                              <Button size="sm" variant="secondary" className="no-padding" value={data[2]} onClick={() => handleBookmarkButtonClick(data[2], "remove")}>
+                                <BsBookmarkDashFill/></Button>
+                            </div>
+                            : <div>
+                              <Button size="sm" variant="secondary" className="no-padding" value={data[2]} onClick={() => handleBookmarkButtonClick(data[2], "add")}>
+                                <BsBookmarkPlus/></Button>
+                            </div>}
 
-                    </> : <></>}
-              </Flex>
-
-              <p style={{fontSize: "10px", marginTop: "-10px"}}>id: {data[2]} </p>
-
-
-              {typeof (data[3]) != "undefined" ? <>
-                <Flex style={flexStyle1}>
-                  <WiThermometer size={24}/><p style={pStyle1}>{data[3]['temp']}°C</p>
-                  <WiHumidity size={24}/><p style={pStyle1}>{data[3]['humidity']}%</p>
-                  <WiBarometer size={24}/><p style={pStyle1}>{data[3]['pressure']}hPa</p>
+                      </> : <></>}
                 </Flex>
-                {data[3]['pm25'] ?
-                    <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM2.5: </b></p>
-                      <p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25']) / 25 * 100)}%</p></Flex>
-                      <p style={{fontSize: "8px", marginTop: "2px", marginBottom: "0px"}}>Indeks</p>
-                      {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}</>
-                    : null}
 
-                {data[3]['pm25Corr'] ?
-                    <><Flex style={flexStyle2} justifySpaceBetween><p style={{marginRight: "3px"}}><b>PM2.5 z
-                      korekcją: </b></p>
-                      <p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr']) / 25 * 100)}%</p></Flex>
-                      <p style={{fontSize: "8px", marginTop: "2px", marginBottom: "0px"}}>Indeks</p>
-                      {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}</>
-                    : null
+                <p style={{fontSize: "10px", marginTop: "-10px"}}>id: {data[2]} </p>
+
+
+                {typeof (data[3]) != "undefined" ? <>
+                  <Flex style={flexStyle1}>
+                    <WiThermometer size={24}/><p style={pStyle1}>{data[3]['temp']}°C</p>
+                    <WiHumidity size={24}/><p style={pStyle1}>{data[3]['humidity']}%</p>
+                    <WiBarometer size={24}/><p style={pStyle1}>{data[3]['pressure']}hPa</p>
+                  </Flex>
+                  {data[3]['pm25'] ?
+                      <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM2.5: </b></p>
+                        <p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25']) / 25 * 100)}%</p></Flex>
+                        <p style={{fontSize: "8px", marginTop: "2px", marginBottom: "0px"}}>Indeks</p>
+                        {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}</>
+                      : null}
+
+                  {data[3]['pm25Corr'] ?
+                      <><Flex style={flexStyle2} justifySpaceBetween><p style={{marginRight: "3px"}}><b>PM2.5 z
+                        korekcją: </b></p>
+                        <p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr']) / 25 * 100)}%</p></Flex>
+                        <p style={{fontSize: "8px", marginTop: "2px", marginBottom: "0px"}}>Indeks</p>
+                        {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}</>
+                      : null
+                  }
+
+                  {data[3]['pm10'] ?
+                      <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM10: </b></p>
+                        <p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10']) / 50 * 100)}%</p></Flex>
+                        <p style={{fontSize: "8px", marginTop: "2px", marginBottom: "0px"}}>Indeks</p>
+                        {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}</>
+                      : null
+                  }
+
+                  <Flex className="padding-top-8 ml-4">
+                    <WiTime9 size={24}/><p
+                      style={{marginTop: "5px"}}>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>
+                  </Flex>
+                  <div id="stats">
+                    <Button variant="secondary" size="sm" value={data[2]} onClick={handleArchivalDataButtonClick}>Dane archiwalne</Button>
+                  </div>
+                </> : <></>
                 }
+              </Popup>
+            </Marker>
 
-                {data[3]['pm10'] ?
-                    <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM10: </b></p>
-                      <p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10']) / 50 * 100)}%</p></Flex>
-                      <p style={{fontSize: "8px", marginTop: "2px", marginBottom: "0px"}}>Indeks</p>
-                      {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}</>
-                    : null
-                }
-
-                <Flex className="padding-top-8 ml-4">
-                  <WiTime9 size={24}/><p
-                    style={{marginTop: "5px"}}>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>
-                </Flex>
-                <div id="stats">
-                  <Button variant="secondary" size="sm" value={data[2]} onClick={handleArchivalDataButtonClick}>Dane archiwalne</Button>
-                </div>
-              </> : <></>
-              }
-            </Popup>
-          </Marker>
-
-      )
+        )
+      }
     }))
   }
 
@@ -497,50 +468,52 @@ function Map(props){
         ref1=null;
       }
       //
-      return (
-        <Marker ref={ref1} key={`marker-${idx}`} position={[data[0], data[1]]}  icon={greenMarker}>
-               <Popup>
-                 <h5 style={{marginBottom: "10px"}}>{data[4]}</h5>
+      if(data[0] && data[1]) {
+        return (
+            <Marker ref={ref1} key={`marker-${idx}`} position={[data[0], data[1]]}  icon={greenMarker}>
+              <Popup>
+                <h5 style={{marginBottom: "10px"}}>{data[4]}</h5>
 
                 <p style={{fontSize: "10px", marginTop: "-10px"}}>id: {data[2]} </p>
-                 
-                 
-                {typeof(data[3])!="undefined" ? <> 
-                <Flex style={flexStyle1}>
-                <WiThermometer size={24}/><p style={pStyle1}>{data[3]['temp']}°C</p>
-                <WiHumidity size={24}/><p style={pStyle1}>{data[3]['humidity']}%</p>
-                <WiBarometer size={24}/><p style={pStyle1}>{data[3]['pressure']}hPa</p>
-                </Flex>
-                {data[3]['pm25'] ? 
-                    <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM2.5: </b></p><p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p></Flex>
-                    <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
-                    {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}</>
-                 : null}
-                 
-                 {data[3]['pm25Corr'] ?
-                    <><Flex style={flexStyle2} justifySpaceBetween><p style={{marginRight:"3px"}}><b>PM2.5 z korekcją: </b></p><p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p></Flex>
-                    <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
-                    {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}</>
-                 : null 
-                 }
-                 
-                 {data[3]['pm10'] ?
-                    <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM10: </b></p><p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p></Flex>
-                    <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
-                    {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}</>
-                 : null
-                 }                
-                <Flex className="padding-top-8 ml-4">
-                <WiTime9 size={24}/><p style={{marginTop:"5px"}}>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>
-                </Flex>
-                <div id="stats">
-                  <Button variant="secondary" size="sm" value={data[2]} onClick={handleArchivalDataButtonClick}>Dane archiwalne</Button>
-                </div>
+
+
+                {typeof(data[3])!="undefined" ? <>
+                  <Flex style={flexStyle1}>
+                    <WiThermometer size={24}/><p style={pStyle1}>{data[3]['temp']}°C</p>
+                    <WiHumidity size={24}/><p style={pStyle1}>{data[3]['humidity']}%</p>
+                    <WiBarometer size={24}/><p style={pStyle1}>{data[3]['pressure']}hPa</p>
+                  </Flex>
+                  {data[3]['pm25'] ?
+                      <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM2.5: </b></p><p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p></Flex>
+                        <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
+                        {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}</>
+                      : null}
+
+                  {data[3]['pm25Corr'] ?
+                      <><Flex style={flexStyle2} justifySpaceBetween><p style={{marginRight:"3px"}}><b>PM2.5 z korekcją: </b></p><p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p></Flex>
+                        <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
+                        {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}</>
+                      : null
+                  }
+
+                  {data[3]['pm10'] ?
+                      <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM10: </b></p><p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p></Flex>
+                        <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
+                        {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}</>
+                      : null
+                  }
+                  <Flex className="padding-top-8 ml-4">
+                    <WiTime9 size={24}/><p style={{marginTop:"5px"}}>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>
+                  </Flex>
+                  <div id="stats">
+                    <Button variant="secondary" size="sm" value={data[2]} onClick={handleArchivalDataButtonClick}>Dane archiwalne</Button>
+                  </div>
                 </> : <></>
                 }
-               </Popup>
-             </Marker>
-      )
+              </Popup>
+            </Marker>
+        )
+      }
     }))
   }
 
@@ -559,63 +532,65 @@ function Map(props){
         ref1=null;
       }
       //
-      return (
-        <Marker ref={ref1} key={`marker-${idx}`} position={[data[0], data[1]]} icon={goldMarker}>
-               <Popup>
-                 <Flex justifySpaceBetween style={{marginTop:"-4px", paddingRight:"10px"}}>
-                   <h5 style={{marginBottom: "10px"}}>{data[4]}</h5>
-                 {stateIsLoggedIn ? 
-                 <>
-                 {checkBookmark(data[2])?
-                  <div><Button variant="secondary" size="sm" className="no-padding" value={data[2]} onClick={() => handleBookmarkButtonClick(data[2],"remove")}><BsBookmarkDashFill/></Button>
-                  </div> 
-                  : <div><Button variant="secondary" size="sm" className="no-padding" value={data[2]} onClick={() => handleBookmarkButtonClick(data[2],"add")}><BsBookmarkPlus/></Button>
-                  </div>}
-                  
-                 </> : <></>}
-                 </Flex>
+      if(data[0] && data[1]) {
+        return (
+            <Marker ref={ref1} key={`marker-${idx}`} position={[data[0], data[1]]} icon={goldMarker}>
+              <Popup>
+                <Flex justifySpaceBetween style={{marginTop:"-4px", paddingRight:"10px"}}>
+                  <h5 style={{marginBottom: "10px"}}>{data[4]}</h5>
+                  {stateIsLoggedIn ?
+                      <>
+                        {checkBookmark(data[2])?
+                            <div><Button variant="secondary" size="sm" className="no-padding" value={data[2]} onClick={() => handleBookmarkButtonClick(data[2],"remove")}><BsBookmarkDashFill/></Button>
+                            </div>
+                            : <div><Button variant="secondary" size="sm" className="no-padding" value={data[2]} onClick={() => handleBookmarkButtonClick(data[2],"add")}><BsBookmarkPlus/></Button>
+                            </div>}
 
-                 <p style={{fontSize: "10px", marginTop: "-10px"}}>id: {data[2]} </p>
-                 
-                 
-                 {typeof(data[3])!="undefined" ? <> 
-                 <Flex style={flexStyle1}>
-                 <WiThermometer size={24}/><p style={pStyle1}>{data[3]['temp']}°C</p>
-                 <WiHumidity size={24}/><p style={pStyle1}>{data[3]['humidity']}%</p>
-                 <WiBarometer size={24}/><p style={pStyle1}>{data[3]['pressure']}hPa</p>
-                 </Flex>
-                 {data[3]['pm25'] ? 
-                    <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM2.5: </b></p><p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p></Flex>
-                    <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
-                    {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}</>
-                 : null}
-                 
-                 {data[3]['pm25Corr'] ?
-                    <><Flex style={flexStyle2} justifySpaceBetween><p style={{marginRight:"3px"}}><b>PM2.5 z korekcją: </b></p><p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p></Flex>
-                    <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
-                    {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}</>
-                 : null 
-                 }
-                 
-                 {data[3]['pm10'] ?
-                    <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM10: </b></p><p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p></Flex>
-                    <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
-                    {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}</>
-                 : null
-                 }         
-                 
-                 <Flex className="padding-top-8 ml-4">
-                  <WiTime9 size={24}/><p style={{marginTop:"5px"}}>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>
-                 </Flex>
-                 <div id="stats">
-                   <Button variant="secondary" size="sm" value={data[2]} onClick={handleArchivalDataButtonClick}>Dane archiwalne</Button>
-                 </div>
-                 </> : <></>
-                 }
-               </Popup>
-             </Marker>
-             
-      )
+                      </> : <></>}
+                </Flex>
+
+                <p style={{fontSize: "10px", marginTop: "-10px"}}>id: {data[2]} </p>
+
+
+                {typeof(data[3])!="undefined" ? <>
+                  <Flex style={flexStyle1}>
+                    <WiThermometer size={24}/><p style={pStyle1}>{data[3]['temp']}°C</p>
+                    <WiHumidity size={24}/><p style={pStyle1}>{data[3]['humidity']}%</p>
+                    <WiBarometer size={24}/><p style={pStyle1}>{data[3]['pressure']}hPa</p>
+                  </Flex>
+                  {data[3]['pm25'] ?
+                      <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM2.5: </b></p><p>{data[3]['pm25']}µg/m³ {Math.round(parseFloat(data[3]['pm25'])/25*100)}%</p></Flex>
+                        <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
+                        {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25']))}</>
+                      : null}
+
+                  {data[3]['pm25Corr'] ?
+                      <><Flex style={flexStyle2} justifySpaceBetween><p style={{marginRight:"3px"}}><b>PM2.5 z korekcją: </b></p><p>{data[3]['pm25Corr']}µg/m³ {Math.round(parseFloat(data[3]['pm25Corr'])/25*100)}%</p></Flex>
+                        <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
+                        {airQualityInfo(getAirQualityIndexPM25(data[3]['pm25Corr']))}</>
+                      : null
+                  }
+
+                  {data[3]['pm10'] ?
+                      <><Flex style={flexStyle2} justifySpaceBetween><p><b>PM10: </b></p><p>{data[3]['pm10']}µg/m³ {Math.round(parseFloat(data[3]['pm10'])/50*100)}%</p></Flex>
+                        <p style={{fontSize: "8px", marginTop: "2px", marginBottom:"0px"}}>Indeks</p>
+                        {airQualityInfo(getAirQualityIndexPM10(data[3]['pm10']))}</>
+                      : null
+                  }
+
+                  <Flex className="padding-top-8 ml-4">
+                    <WiTime9 size={24}/><p style={{marginTop:"5px"}}>{format(Date.parse(data[3]['date']), 'yyyy.MM.dd HH:mm')}</p>
+                  </Flex>
+                  <div id="stats">
+                    <Button variant="secondary" size="sm" value={data[2]} onClick={handleArchivalDataButtonClick}>Dane archiwalne</Button>
+                  </div>
+                </> : <></>
+                }
+              </Popup>
+            </Marker>
+
+        )
+      }
     }))
   }
 

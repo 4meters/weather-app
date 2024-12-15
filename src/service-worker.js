@@ -70,3 +70,21 @@ self.addEventListener('message', (event) => {
 });
 
 // Any other custom service worker logic can go here.
+
+self.addEventListener('install', event => {
+    self.skipWaiting(); // Activate immediately after installation
+});
+
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    // Optionally delete old caches here
+                    return caches.delete(cacheName);
+                })
+            );
+        })
+    );
+    return self.clients.claim(); // Take control of all clients
+});
